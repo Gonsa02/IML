@@ -1,4 +1,3 @@
-# File: data_loader.py
 import pandas as pd
 from scipy.io import arff
 import os
