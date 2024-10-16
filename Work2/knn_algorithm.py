@@ -97,8 +97,6 @@ class KnnAlgorithm:
         for i, x_train in enumerate(self.X_train):
             distances[i] = self.distance_metrics[d_metric](x, x_train)
 
-            
-
         # https://stackoverflow.com/questions/34226400/find-the-index-of-the-k-smallest-values-of-a-numpy-array
         return np.argpartition(distances, k)[:k]
 
