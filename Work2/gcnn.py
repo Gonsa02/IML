@@ -18,7 +18,14 @@ class GCNN:
         self.unabsorbed_mask = np.ones(len(labels), dtype=bool)
 
         # Distances between samples
-        self.distances = cdist(dataset, dataset, metric='euclidean')
+        self.distances = cdist(
+            dataset, dataset, metric=self._minkowski_distance)
+
+    def _minkowski_distance(self, x1, x2, r=1):
+        distance = 0.0
+        for i in range(len(x1)):
+            distance += (abs(x1[i] - x2[i])) ** r
+        return distance ** (1 / r)
 
     # G1 step
 
