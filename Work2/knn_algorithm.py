@@ -30,9 +30,6 @@ class KnnAlgorithm:
             self.train(X_train, y_train)
 
     def train(self, X_train, y_train, weight_method="eq_weight"):
-        self.original_X_train = X_train
-        self.original_y_train = y_train
-
         self.X_train = X_train.to_numpy()
         self.y_train = y_train.to_numpy()
 
@@ -44,6 +41,8 @@ class KnnAlgorithm:
 
         self.feature_weights = self.weighting_methods[weight_method](self.X_train, self.y_train)
         self.X_train *= self.feature_weights
+
+        self.y_train_name = y_train.name
 
     def _minkowski_distance(self, x1, x2, r=1):
         distance = 0.0
@@ -110,4 +109,4 @@ class KnnAlgorithm:
             neighborhoods_index = self._get_k_nearest_neighborhood(x, k, d_metric)
             predictions[i] = self.voting_policies[v_policy](x, neighborhoods_index, d_metric)
 
-        return pd.Series(np.vectorize(self.integer_to_label.get)(predictions), name=self.original_y_train.name)
+        return pd.Series(np.vectorize(self.integer_to_label.get)(predictions), name=self.y_train_name)
