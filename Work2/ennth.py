@@ -6,11 +6,12 @@ from scipy.spatial.distance import cdist
 class ENNTh:
 
     def __init__(self, dataset, labels, k=3, threshold=0.7):
-        self.dataset = dataset
-        self.labels = labels
+        self.dataset = dataset.to_numpy()
+        self.labels = labels.to_numpy()
         self.unique_labels = np.unique(labels)
         self.k = k
         self.thresh = threshold
+        self.columns = dataset.columns
 
         self.distances = cdist(
             dataset, dataset, metric=self._minkowski_distance)
@@ -22,16 +23,19 @@ class ENNTh:
         idxs_to_remove = []
         for sample_idx, (label, prob) in enumerate(self.probabilities):
             if (sample_idx % 50) == 0:
-                print('Execution:', sample_idx+1)
+                print('Sample:', sample_idx+1)
                 print('   # idxs_to_remove:', len(idxs_to_remove))
 
             if label != self.labels[sample_idx] or prob <= self.thresh:
                 idxs_to_remove.append(sample_idx)
 
-        new_dataset = self.dataset.drop(idxs_to_remove).reset_index()
-        new_labels = self.labels.drop(idxs_to_remove).reset_index()
+        new_dataset = np.delete(self.dataset, idxs_to_remove, axis=0)
+        new_labels = np.delete(self.labels, idxs_to_remove, axis=0)
 
-        return new_dataset, new_labels
+        # new_dataset = self.dataset.drop(idxs_to_remove).reset_index()
+        # new_labels = self.labels.drop(idxs_to_remove).reset_index()
+
+        return pd.DataFrame(new_dataset, columns=self.columns).reset_index(drop=True), pd.Series(new_labels).reset_index(drop=True)
 
     def _compute_probabilities(self):
         # Order distances
