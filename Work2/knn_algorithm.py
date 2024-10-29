@@ -32,10 +32,8 @@ class KnnAlgorithm:
     def train(self, X_train, y_train, weight_method="eq_weight"):
         self.X_train = X_train.to_numpy()
         self.y_train = y_train.to_numpy()
-
-        self.num_classes = len(self.label_to_integer)
-
-        self.y_train = np.vectorize(self.label_to_integer.get)(self.y_train) #Convert all classes to integers
+        
+        self.num_classes = np.unique(self.y_train).size
 
         self.feature_weights = self.weighting_methods[weight_method](self.X_train, self.y_train)
         self.X_train *= self.feature_weights
