@@ -33,8 +33,6 @@ class KnnAlgorithm:
         self.X_train = X_train.to_numpy()
         self.y_train = y_train.to_numpy()
 
-        self.label_to_integer = {label: idx for idx, label in enumerate(np.unique(self.y_train))}
-        self.integer_to_label = {idx: label for label, idx in self.label_to_integer.items()}
         self.num_classes = len(self.label_to_integer)
 
         self.y_train = np.vectorize(self.label_to_integer.get)(self.y_train) #Convert all classes to integers
@@ -109,4 +107,4 @@ class KnnAlgorithm:
             neighborhoods_index = self._get_k_nearest_neighborhood(x, k, d_metric)
             predictions[i] = self.voting_policies[v_policy](x, neighborhoods_index, d_metric)
 
-        return pd.Series(np.vectorize(self.integer_to_label.get)(predictions), name=self.y_train_name)
+        return pd.Series(predictions, name=self.y_train_name)
