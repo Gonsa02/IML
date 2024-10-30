@@ -32,9 +32,6 @@ class ENNTh:
         new_dataset = np.delete(self.dataset, idxs_to_remove, axis=0)
         new_labels = np.delete(self.labels, idxs_to_remove, axis=0)
 
-        # new_dataset = self.dataset.drop(idxs_to_remove).reset_index()
-        # new_labels = self.labels.drop(idxs_to_remove).reset_index()
-
         return pd.DataFrame(new_dataset, columns=self.columns).reset_index(drop=True), pd.Series(new_labels).reset_index(drop=True)
 
     def _compute_probabilities(self):
@@ -61,7 +58,7 @@ class ENNTh:
             self.probabilities.append(
                 (self.unique_labels[max_prob_idx], max_prob))
 
-    def _minkowski_distance(self, x1, x2, r=1):
+    def _minkowski_distance(self, x1, x2, r=2):
         distance = 0.0
         for i in range(len(x1)):
             distance += (abs(x1[i] - x2[i])) ** r
