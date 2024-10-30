@@ -19,13 +19,20 @@ def main():
     args = parser.parse_args()
 
     if args.experiment == 'knn':
+        if args.ir_method:
+            parser.error("--ir_method is not allowed with knn experiment. Did you mean knn_ir?")
         run_knn_experiment()
+
     elif args.experiment == 'svm':
+        if args.ir_method:
+            parser.error("--ir_method is not allowed with svm experiment. Did you mean svm_ir?")
         run_svm_experiment()
+
     elif args.experiment == 'knn_ir':
         if not args.ir_method:
             parser.error("--ir_method is required for knn_ir experiment.")
         run_knn_ir_experiment(ir_method=args.ir_method)
+
     elif args.experiment == 'svm_ir':
         if not args.ir_method:
             parser.error("--ir_method is required for svm_ir experiment.")
