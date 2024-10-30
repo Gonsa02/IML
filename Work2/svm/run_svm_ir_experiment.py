@@ -12,7 +12,7 @@ print("Parent folder path:", parent_folder_path)
 
 from data_preparation import CrossValidationDataLoader, DataProcessor
 from svm.svm_algorithm import svmAlgorithm
-from instance_reduction import apply_instance_reduction
+from instance_reduction import reductionAlgorithm
 
 def run_svm_ir_experiment(ir_method):
     """
@@ -81,7 +81,7 @@ def run_svm_ir_experiment(ir_method):
                 #ir_kwargs["weight"] = "eq_weight" # Weight not included in DROP3?
 
             # Apply instance reduction
-            X_train_reduced, Y_train_reduced = apply_instance_reduction(X_train, Y_train, ir_method, **ir_kwargs)
+            X_train_reduced, Y_train_reduced = reductionAlgorithm(X_train, Y_train, ir_method, **ir_kwargs)
 
             start = time.time()
             try:

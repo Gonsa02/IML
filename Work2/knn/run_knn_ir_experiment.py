@@ -12,7 +12,7 @@ print("Parent folder path:", parent_folder_path)
 
 from data_preparation import CrossValidationDataLoader, DataProcessor
 from knn.knn_algorithm import KnnAlgorithm
-from instance_reduction import apply_instance_reduction
+from instance_reduction import reductionAlgorithm
 
 def run_knn_ir_experiment(ir_method):
     """
@@ -78,7 +78,7 @@ def run_knn_ir_experiment(ir_method):
                 ir_kwargs["voting"] = params["voting_policy"]
 
             # Apply instance reduction
-            X_train_reduced, Y_train_reduced = apply_instance_reduction(X_train, Y_train, ir_method, **ir_kwargs)
+            X_train_reduced, Y_train_reduced = reductionAlgorithm(X_train, Y_train, ir_method, **ir_kwargs)
 
             start = time.time()
 

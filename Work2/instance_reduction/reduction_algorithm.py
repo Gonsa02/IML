@@ -2,7 +2,7 @@ from .drop3 import DROP3
 from .ennth import ENNTh
 from .gcnn import GCNN
 
-def apply_instance_reduction(X_train, Y_train, method, **kwargs):
+def reductionAlgorithm(X_train, Y_train, method, **kwargs):
     """
     Applies the specified instance reduction method to the training data.
 

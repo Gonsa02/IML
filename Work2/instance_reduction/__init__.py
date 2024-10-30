@@ -1,3 +1,3 @@
-from .instance_reduction_selector import apply_instance_reduction
+from .reduction_algorithm import reductionAlgorithm
 
-__all__ = ["apply_instance_reduction"]
+__all__ = ["reductionAlgorithm"]
