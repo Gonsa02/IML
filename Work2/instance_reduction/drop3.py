@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import cdist
-from ennth import ENNTh
-from knn_algorithm import KnnAlgorithm
+from .ennth import ENNTh
+from knn.knn_algorithm import KnnAlgorithm
 
 
 class DROP3:

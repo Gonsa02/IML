@@ -12,10 +12,15 @@ print("Parent folder path:", parent_folder_path)
 
 from data_preparation import CrossValidationDataLoader, DataProcessor
 from knn.knn_algorithm import KnnAlgorithm
+from instance_reduction import apply_instance_reduction
 
-# from instance_reduction import apply_instance_reduction  # This is a custom module we'll define
+def run_knn_experiment(instance_reduction_method=None):
+    """
+    Runs the KNN experiment with optional instance reduction.
 
-def run_knn_experiment(instance_reduction=False):
+    Parameters:
+    - instance_reduction_method (str or None): The instance reduction method to apply ('drop3', 'ennth', 'gcnn'), or None to skip.
+    """
     # Load and preprocess the data
     loader_balance = CrossValidationDataLoader("bal")
     loader_sick = CrossValidationDataLoader("sick")
@@ -65,8 +70,8 @@ def run_knn_experiment(instance_reduction=False):
         X_test = Test.drop("class", axis=1)
 
         # Apply instance reduction if specified
-        if instance_reduction:
-            X_train, Y_train = apply_instance_reduction(X_train, Y_train)
+        if instance_reduction_method:
+            X_train, Y_train = apply_instance_reduction(X_train, Y_train, instance_reduction_method)
 
         start = time.time()
 
@@ -104,8 +109,8 @@ def run_knn_experiment(instance_reduction=False):
     # Save results
     results_df = pd.DataFrame(results)
     os.makedirs('results', exist_ok=True)
-    if instance_reduction:
-        results_filename = 'results/knn_results_ir.csv'
+    if instance_reduction_method:
+        results_filename = f'results/knn_results_ir_{instance_reduction_method}.csv'
     else:
         results_filename = 'results/knn_results.csv'
     results_df.to_csv(results_filename, index=False)

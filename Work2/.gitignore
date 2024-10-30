@@ -1,0 +1,27 @@
+# Ignore the data folder
+data/
+
+# Ignore all compiled Python files and caches
+__pycache__/
+*.py[cod]
+
+# Ignore virtual environment folders
+.venv/
+env/
+venv/
+
+# Ignore editor/IDE config files
+.vscode/
+.idea/
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore temporary and backup files
+*.bak
+*.tmp
+*~
+
+# Ignore log files
+*.log
