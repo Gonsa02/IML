@@ -62,8 +62,8 @@ def run_knn_ir_experiment(ir_method):
         params = best_params[dataset_name]
         num_folds = len(folds)
         for i in range(num_folds):
-            folds = dataset_folds[dataset_name]
-            Train, Test = folds[i]
+            fold = folds[i]
+            Train, Test = fold
 
             Y_train = Train["class"]
             X_train = Train.drop("class", axis=1)

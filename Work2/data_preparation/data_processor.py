@@ -10,7 +10,7 @@ class DataProcessor:
 
     def __init__(self, num_folds=10):
         self.num_folds = num_folds
-        self.label_mapping_bal = {'B': 0, 'L': 1, 'R': 2}
+        self.label_mapping_bal = {'L': 0, 'R': 1, 'B': 2}
         self.label_mapping_sick = {'negative': 0, 'sick': 1}
 
     def preprocess_bal(self, df):
