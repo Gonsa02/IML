@@ -1,3 +1,4 @@
+import data_loader
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder, MinMaxScaler
@@ -10,6 +11,8 @@ class DataProcessor:
 
     def __init__(self, num_folds=10):
         self.num_folds = num_folds
+        self.label_mapping_bal = {'B': 0, 'L': 1, 'R': 2}
+        self.label_mapping_sick = {'negative': 0, 'sick': 1}
 
     def preprocess_bal(self, df):
         df[['a1', 'a2', 'a3', 'a4']] = df[[
@@ -22,6 +25,9 @@ class DataProcessor:
             encoded_column = encoder.fit_transform(df[[col]])
             df = pd.concat([df.drop(columns=[col]), pd.DataFrame(
                 encoded_column, columns=encoder.get_feature_names_out([col]))], axis=1)
+
+        df['class'] = df['class'].map(self.label_mapping_bal)
+
         return df
 
     def preprocess_all_bal_folds(self, fold_list):
@@ -35,9 +41,12 @@ class DataProcessor:
     def preprocess_sick(self, df):
         columns_to_remove = ['TSH_measured', 'T3_measured',
                              'TT4_measured', 'T4U_measured', 'FTI_measured', 'TBG_measured', 'TBG']
-        df = df.replace({"t": 1, "f": 0, "F": 1, "M": 0, "?": np.nan})
+        df['sex'] = df['sex'].replace('?', 'unknown')
+        df = df.replace({"t": 1, "f": 0, "F": 1, "M": 0})
         df = df.drop(columns_to_remove, axis=1)
         df = df.dropna().reset_index(drop=True)
+
+        df['Class'] = df['Class'].map(self.label_mapping_sick)
 
         return df
 
