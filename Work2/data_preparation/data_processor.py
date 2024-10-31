@@ -40,7 +40,7 @@ class DataProcessor:
     def preprocess_sick(self, df):
         columns_to_remove = ['TSH_measured', 'T3_measured',
                              'TT4_measured', 'T4U_measured', 'FTI_measured', 'TBG_measured', 'TBG']
-        df['sex'] = df['sex'].replace('?', 'unknown')
+        df['sex'] = df['sex'].replace('?', np.nan)
         df = df.replace({"t": 1, "f": 0, "F": 1, "M": 0})
         df = df.drop(columns_to_remove, axis=1)
         df = df.dropna().reset_index(drop=True)
