@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 import itertools
-from scipy.spatial.distance import cdist
+from scipy.spatial.distance import pdist, squareform
 
 
 class GCNN:
@@ -18,8 +18,8 @@ class GCNN:
         self.unabsorbed_mask = np.ones(len(labels), dtype=bool)
 
         # Distances between samples
-        self.distances = cdist(
-            dataset, dataset, metric=self._minkowski_distance)
+        self.distances = squareform(pdist(
+            dataset, metric=self._minkowski_distance))
 
     def _minkowski_distance(self, x1, x2, r=2):
         distance = 0.0

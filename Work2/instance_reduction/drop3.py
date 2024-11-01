@@ -1,8 +1,7 @@
 import numpy as np
 import pandas as pd
-from scipy.spatial.distance import cdist
-from .ennth import ENNTh
-from knn.knn_algorithm import KnnAlgorithm
+from scipy.spatial.distance import pdist, squareform
+from instance_reduction.ennth import ENNTh
 
 
 class DROP3:
@@ -29,7 +28,7 @@ class DROP3:
         self.S_labels = self.S_labels.to_numpy()
 
         # Distances between samples
-        distances = cdist(self.S, self.S, metric=self._minkowski_distance)
+        distances = squareform(pdist(self.S, metric=self._minkowski_distance))
         # for each sample, the idx of the distances in increasing order.
         nn_idxs_matrix = np.argsort(distances, axis=1)
 
@@ -47,51 +46,48 @@ class DROP3:
 
         # idx samples in decreasing order
         sorted_enemy_distances = np.argsort(-min_enemy_distances).astype(int)
-        knn = [set() for _ in range(len(self.S))]
-        associates = [set() for _ in range(len(self.S))]
+
+        knn = {sample_idx: nn_idxs_matrix[sample_idx][1:self.k+2]
+               for sample_idx in sorted_enemy_distances}
+        associates = {sample_idx: set()
+                      for sample_idx in sorted_enemy_distances}
 
         for sample_idx in sorted_enemy_distances:
             knn[sample_idx] = nn_idxs_matrix[sample_idx][1:self.k+2]  # k+1 NN
-
             for knn_idx in knn[sample_idx]:
                 associates[knn_idx].add(sample_idx)
 
-        new_S = np.copy(self.S)
-        new_S_labels = np.copy(self.S_labels)
         deleted_samples = set()  # set for optimal search
         mask = np.ones(len(self.S), dtype=bool)
 
         for i, sample_idx in enumerate(sorted_enemy_distances):
-            #if (i % 1) == 0:
-                #print('Iteration:', i)
-                #print('   # deleted_samples:', len(deleted_samples))
+            if (i % 1) == 0:
+                print('Iteration:', i)
+                print('   # deleted_samples:', len(deleted_samples))
 
-            #if not associates[sample_idx]:
-                #print(f"""Skipping sample {sample_idx}
-                      #due to lack of associates.""")
-                #continue
+            if not associates.get(sample_idx, []):
+                print(f"""Skipping sample {sample_idx}
+                      due to lack of associates.""")
+                continue
 
-            knn_model = KnnAlgorithm(pd.DataFrame(
-                self.S[mask], columns=self.columns), pd.Series(self.S_labels[mask]))
-            labels_predicted_with = knn_model.predict(
-                pd.DataFrame(self.S[list(associates[sample_idx])]), self.k, self.metric, self.voting)
+            # WITH
+            pred_labels = [np.bincount(
+                self.S_labels[knn[a][:self.k+1]]).argmax() for a in associates[sample_idx]]
+            true_labels = [self.S_labels[a] for a in associates[sample_idx]]
+            accuracy_with = np.sum(np.array(pred_labels)
+                                   == np.array(true_labels))
 
-            mask[sample_idx] = False  # Temporal masking
+            pred_labels_without = [
+                np.bincount(
+                    self.S_labels[[nn for nn in knn[a][:self.k+2] if nn != sample_idx]]).argmax()
+                for a in associates[sample_idx]
+                if associates[sample_idx]]
+            true_labels_without = [self.S_labels[a]
+                                   for a in associates[sample_idx]]
+            accuracy_without = np.sum(
+                np.array(pred_labels_without) == np.array(true_labels_without))
 
-            knn_model_without = KnnAlgorithm(pd.DataFrame(
-                self.S[mask], columns=self.columns), pd.Series(self.S_labels[mask]))
-            labels_predicted_without = knn_model_without.predict(
-                pd.DataFrame(self.S[list(associates[sample_idx])]), self.k, self.metric, self.voting)
-
-            mask[sample_idx] = True  # Reset mask
-            labels_true = self.S_labels[list(associates[sample_idx])]
-
-            with_counter = np.sum(
-                labels_predicted_with == labels_true)
-            without_counter = np.sum(
-                labels_predicted_without == labels_true)
-
-            if without_counter >= with_counter:
+            if accuracy_with >= accuracy_without:
                 deleted_samples.add(sample_idx)
                 mask[sample_idx] = False
 

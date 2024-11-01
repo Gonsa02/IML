@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from scipy.spatial.distance import cdist
+from scipy.spatial.distance import pdist, squareform
 
 
 class ENNTh:
@@ -13,9 +13,8 @@ class ENNTh:
         self.thresh = threshold
         self.columns = dataset.columns
 
-        self.distances = cdist(
-            dataset, dataset, metric='euclidean')
-            #dataset, dataset, metric=self._minkowski_distance)
+        self.distances = squareform(pdist(
+            dataset, metric=self._minkowski_distance))
 
         self.probabilities = []  # (label, prob)
         self._compute_probabilities()
