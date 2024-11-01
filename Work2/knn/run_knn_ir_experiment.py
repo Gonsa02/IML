@@ -1,3 +1,6 @@
+from instance_reduction import reductionAlgorithm
+from knn.knn_algorithm import KnnAlgorithm
+from data_preparation import CrossValidationDataLoader, DataProcessor
 import time
 import os
 import sys
@@ -6,13 +9,11 @@ import pandas as pd
 from tqdm import tqdm
 
 # Add parent folder to path
-parent_folder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+parent_folder_path = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, parent_folder_path)
 print("Parent folder path:", parent_folder_path)
 
-from data_preparation import CrossValidationDataLoader, DataProcessor
-from knn.knn_algorithm import KnnAlgorithm
-from instance_reduction import reductionAlgorithm
 
 def run_knn_ir_experiment(ir_method):
     """
@@ -44,10 +45,12 @@ def run_knn_ir_experiment(ir_method):
     data_preprocessor = DataProcessor()
 
     all_folds_balance = loader_balance.load_all_folds()
-    all_folds_balance = data_preprocessor.preprocess_all_bal_folds(all_folds_balance)
+    all_folds_balance = data_preprocessor.preprocess_all_bal_folds(
+        all_folds_balance)
 
     all_folds_sick = loader_sick.load_all_folds()
-    all_folds_sick = data_preprocessor.preprocess_all_sick_folds(all_folds_sick)
+    all_folds_sick = data_preprocessor.preprocess_all_sick_folds(
+        all_folds_sick)
 
     # Map datasets
     dataset_folds = {
@@ -73,18 +76,24 @@ def run_knn_ir_experiment(ir_method):
 
             # Prepare additional parameters for instance reduction
             ir_kwargs = {}
-            if ir_method == "drop3":
-                ir_kwargs["metric"] = params["distance_metric"]
-                ir_kwargs["voting"] = params["voting_policy"]
+            # if ir_method == "drop3":
+            #     ir_kwargs["metric"] = params["distance_metric"]
+            #     ir_kwargs["voting"] = params["voting_policy"]
 
             # Apply instance reduction
-            X_train_reduced, Y_train_reduced = reductionAlgorithm(X_train, Y_train, ir_method, **ir_kwargs)
+            X_train_reduced, Y_train_reduced = reductionAlgorithm(
+                X_train, Y_train, ir_method, **ir_kwargs)
+
+            # Storage
+            storage = (len(Y_train)/len(Y_train_reduced))*100
 
             start = time.time()
 
             knn = KnnAlgorithm()
-            knn.train(X_train_reduced, Y_train_reduced, weight_method=params["weight_method"])
-            predictions = knn.predict(X_test, params["k"], params["distance_metric"], params["voting_policy"])
+            knn.train(X_train_reduced, Y_train_reduced,
+                      weight_method=params["weight_method"])
+            predictions = knn.predict(
+                X_test, params["k"], params["distance_metric"], params["voting_policy"])
 
             end = time.time()
 
@@ -109,7 +118,8 @@ def run_knn_ir_experiment(ir_method):
                 "Distance Metric": dist_metric,
                 "r (if Minkowski)": r,
                 "Accuracy": accuracy,
-                "Time (seconds)": total_time
+                "Time (seconds)": total_time,
+                "Storage percentage": storage
             }
 
             results.append(result_entry)
