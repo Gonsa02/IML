@@ -74,18 +74,12 @@ def run_knn_ir_experiment(ir_method):
             Y_test = Test["class"]
             X_test = Test.drop("class", axis=1)
 
-            # Prepare additional parameters for instance reduction
-            ir_kwargs = {}
-            # if ir_method == "drop3":
-            #     ir_kwargs["metric"] = params["distance_metric"]
-            #     ir_kwargs["voting"] = params["voting_policy"]
-
             # Apply instance reduction
             X_train_reduced, Y_train_reduced = reductionAlgorithm(
-                X_train, Y_train, ir_method, **ir_kwargs)
+                X_train, Y_train, ir_method)
 
             # Storage
-            storage = (len(Y_train)/len(Y_train_reduced))*100
+            storage = (len(Y_train_reduced)/len(Y_train))*100
 
             start = time.time()
 

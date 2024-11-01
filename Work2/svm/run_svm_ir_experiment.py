@@ -72,16 +72,11 @@ def run_svm_ir_experiment(ir_method):
             Y_test = Test["class"]
             X_test = Test.drop("class", axis=1)
 
-            # Prepare additional parameters for instance reduction
-            ir_kwargs = {}
-            if ir_method == "drop3":
-                ir_kwargs["metric"] = "hamming"
-                ir_kwargs["voting"] = "sheppard" if dataset_name == "sick" else "majority"
-                ir_kwargs["k"] = 7
-                #ir_kwargs["weight"] = "eq_weight" # Weight not included in DROP3?
-
             # Apply instance reduction
-            X_train_reduced, Y_train_reduced = reductionAlgorithm(X_train, Y_train, ir_method, **ir_kwargs)
+            X_train_reduced, Y_train_reduced = reductionAlgorithm(X_train, Y_train, ir_method)
+
+            # Storage
+            storage = (len(Y_train_reduced)/len(Y_train))*100
 
             start = time.time()
             try:
@@ -94,9 +89,10 @@ def run_svm_ir_experiment(ir_method):
                 result_entry = {
                     "Dataset": f"{dataset_name}_{i}",
                     "Instance Reduction Method": ir_method,
+                    **params,
                     "Accuracy": accuracy,
                     "Time (seconds)": total_time,
-                    **params
+                    "Storage percentage": storage
                 }
 
                 results.append(result_entry)
