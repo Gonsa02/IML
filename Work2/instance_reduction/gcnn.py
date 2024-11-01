@@ -8,7 +8,6 @@ from scipy.spatial.distance import pdist, squareform
 class GCNN:
     def __init__(self, dataset, labels, p=0.7):
         self.prototypes = []    # idx
-
         self.dataset = np.array(dataset)
         self.labels = np.array(labels)
         self.columns = dataset.columns

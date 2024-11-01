@@ -5,7 +5,7 @@ from scipy.spatial.distance import pdist, squareform
 
 class ENNTh:
 
-    def __init__(self, dataset, labels, k=3, threshold=0.7):
+    def __init__(self, dataset, labels, k=7, threshold=0.7):
         self.dataset = dataset.to_numpy()
         self.labels = labels.to_numpy()
         self.unique_labels = np.unique(labels)

@@ -6,15 +6,13 @@ from instance_reduction.ennth import ENNTh
 
 class DROP3:
     # k usually 1, 3 or 5 (section 4)
-    def __init__(self, dataset, labels, metric, voting, k=3, k_ennth=3, threshold=0.7):
+    def __init__(self, dataset, labels, k=7, k_ennth=7, threshold=0.7):
         self.T = dataset
         self.columns = dataset.columns
         self.T_labels = labels
         self.k = k
         self.k_ennth = k_ennth
         self.thresh = threshold
-        self.metric = metric
-        self.voting = voting
 
     # Step 1: Remove noisy instances (ENNTh algorithm)
     def _noise_filtering(self):

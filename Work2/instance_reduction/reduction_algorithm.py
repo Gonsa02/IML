@@ -16,24 +16,9 @@ def reductionAlgorithm(X_train, Y_train, method, **kwargs):
     - X_reduced (pd.DataFrame): Reduced training features.
     - Y_reduced (pd.Series): Reduced training labels.
     """
-    # Check if any element in X_train or Y_train is a string
-    if X_train.applymap(type).eq(str).any().any():
-        print("Non-numeric data detected in X_train:")
-        print("X_train:")
-        print(X_train)
-        raise ValueError("X_train should only contain numeric data.")
-
-    if Y_train.apply(lambda x: isinstance(x, str)).any():
-        print("Non-numeric data detected in Y_train:")
-        print("Y_train:")
-        print(Y_train)
-        raise ValueError("Y_train should only contain numeric data.")
-
     if method == "drop3":
-        metric = kwargs.get('metric', 'minkowski_r2')
-        voting = kwargs.get('voting', 'majority')
-        k = kwargs.get('k', 3)
-        ir_model = DROP3(X_train, Y_train, metric=metric, voting=voting, k=k)
+        k = kwargs.get('k', 7)
+        ir_model = DROP3(X_train, Y_train, k=k)
     elif method == "ennth":
         ir_model = ENNTh(X_train, Y_train)
     elif method == "gcnn":

@@ -3,7 +3,7 @@ data/
 
 # Ignore all compiled Python files and caches
 __pycache__/
-*.py[cod]
+**/*.py[cod]
 
 # Ignore virtual environment folders
 .venv/
