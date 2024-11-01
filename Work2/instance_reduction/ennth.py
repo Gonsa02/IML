@@ -5,7 +5,7 @@ from scipy.spatial.distance import pdist, squareform
 
 class ENNTh:
 
-    def __init__(self, dataset, labels, k=7, threshold=0.7):
+    def __init__(self, dataset, labels, k=7, threshold=0.8):
         self.dataset = dataset.to_numpy()
         self.labels = labels.to_numpy()
         self.unique_labels = np.unique(labels)
@@ -22,7 +22,7 @@ class ENNTh:
     def fit(self):
         idxs_to_remove = []
         for sample_idx, (label, prob) in enumerate(self.probabilities):
-            if (sample_idx % 50) == 0:
+            if (sample_idx % 100) == 0:
                 print('Sample:', sample_idx+1)
                 print('   # idxs_to_remove:', len(idxs_to_remove))
 
@@ -65,9 +65,11 @@ class ENNTh:
                 diff = x1[i] - x2[i]
                 distance += abs(diff) ** r
             except TypeError as te:
-                print(f"TypeError at index {i}: cannot subtract x2[{i}] from x1[{i}].")
-                print(f"  x1[{i}] type: {type(x1[i])}, x2[{i}] type: {type(x2[i])}")
+                print(f"""TypeError at index {
+                      i}: cannot subtract x2[{i}] from x1[{i}].""")
+                print(f"""  x1[{i}] type: {type(x1[i])
+                                           }, x2[{i}] type: {type(x2[i])}""")
                 print(f"  x1[{i}] = {x1[i]}, x2[{i}] = {x2[i]}")
                 raise te
-        
+
         return distance ** (1 / r)

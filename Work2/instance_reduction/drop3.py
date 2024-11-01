@@ -6,7 +6,7 @@ from instance_reduction.ennth import ENNTh
 
 class DROP3:
     # k usually 1, 3 or 5 (section 4)
-    def __init__(self, dataset, labels, k=7, k_ennth=7, threshold=0.7):
+    def __init__(self, dataset, labels, k=7, k_ennth=7, threshold=0.8):
         self.T = dataset
         self.columns = dataset.columns
         self.T_labels = labels
@@ -59,7 +59,7 @@ class DROP3:
         mask = np.ones(len(self.S), dtype=bool)
 
         for i, sample_idx in enumerate(sorted_enemy_distances):
-            if (i % 1) == 0:
+            if (i % 100) == 0:
                 print('Iteration:', i)
                 print('   # deleted_samples:', len(deleted_samples))
 
