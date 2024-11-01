@@ -6,7 +6,7 @@ from scipy.spatial.distance import cdist
 
 
 class GCNN:
-    def __init__(self, dataset, labels, p):
+    def __init__(self, dataset, labels, p=0.7):
         self.prototypes = []    # idx
 
         self.dataset = np.array(dataset)

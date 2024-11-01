@@ -1,0 +1,21 @@
+Dataset,Instance Reduction Method,k,Feature Weighting Method,Selection Method,Distance Metric,r (if Minkowski),Accuracy,Time (seconds)
+balance_0,gcnn,7,eq_weight,majority,hamming,,0.7419354838709677,0.10546255111694336
+balance_1,gcnn,7,eq_weight,majority,hamming,,0.7580645161290323,0.1083993911743164
+balance_2,gcnn,7,eq_weight,majority,hamming,,0.7777777777777778,0.20018720626831055
+balance_3,gcnn,7,eq_weight,majority,hamming,,0.8,0.2257533073425293
+balance_4,gcnn,7,eq_weight,majority,hamming,,0.7619047619047619,0.19432544708251953
+balance_5,gcnn,7,eq_weight,majority,hamming,,0.78125,0.2245960235595703
+balance_6,gcnn,7,eq_weight,majority,hamming,,0.7868852459016393,0.2079935073852539
+balance_7,gcnn,7,eq_weight,majority,hamming,,0.7704918032786885,0.20311617851257324
+balance_8,gcnn,7,eq_weight,majority,hamming,,0.7936507936507936,0.2089681625366211
+balance_9,gcnn,7,eq_weight,majority,hamming,,0.7868852459016393,0.19920587539672852
+sick_0,gcnn,7,eq_weight,sheppard,hamming,,0.571969696969697,0.09666919708251953
+sick_1,gcnn,7,eq_weight,sheppard,hamming,,0.9153846153846154,0.10155820846557617
+sick_2,gcnn,7,eq_weight,sheppard,hamming,,0.6304347826086957,0.14798808097839355
+sick_3,gcnn,7,eq_weight,sheppard,hamming,,0.850187265917603,0.10253453254699707
+sick_4,gcnn,7,eq_weight,sheppard,hamming,,0.8371212121212122,0.10643577575683594
+sick_5,gcnn,7,eq_weight,sheppard,hamming,,0.41729323308270677,0.16502642631530762
+sick_6,gcnn,7,eq_weight,sheppard,hamming,,0.3984375,0.08886098861694336
+sick_7,gcnn,7,eq_weight,sheppard,hamming,,0.8910505836575876,0.03762102127075195
+sick_8,gcnn,7,eq_weight,sheppard,hamming,,0.36329588014981273,0.08585715293884277
+sick_9,gcnn,7,eq_weight,sheppard,hamming,,0.7556390977443609,0.07128453254699707

@@ -62,14 +62,14 @@ class DROP3:
         mask = np.ones(len(self.S), dtype=bool)
 
         for i, sample_idx in enumerate(sorted_enemy_distances):
-            if (i % 1) == 0:
-                print('Iteration:', i)
-                print('   # deleted_samples:', len(deleted_samples))
+            #if (i % 1) == 0:
+                #print('Iteration:', i)
+                #print('   # deleted_samples:', len(deleted_samples))
 
-            if not associates[sample_idx]:
-                print(f"""Skipping sample {sample_idx}
-                      due to lack of associates.""")
-                continue
+            #if not associates[sample_idx]:
+                #print(f"""Skipping sample {sample_idx}
+                      #due to lack of associates.""")
+                #continue
 
             knn_model = KnnAlgorithm(pd.DataFrame(
                 self.S[mask], columns=self.columns), pd.Series(self.S_labels[mask]))

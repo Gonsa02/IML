@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-# add parent folder to path
+# Add parent folder to path
 parent_folder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, parent_folder_path)
 print("Parent folder path:", parent_folder_path)

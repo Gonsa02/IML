@@ -14,7 +14,8 @@ class ENNTh:
         self.columns = dataset.columns
 
         self.distances = cdist(
-            dataset, dataset, metric=self._minkowski_distance)
+            dataset, dataset, metric='euclidean')
+            #dataset, dataset, metric=self._minkowski_distance)
 
         self.probabilities = []  # (label, prob)
         self._compute_probabilities()
@@ -61,5 +62,13 @@ class ENNTh:
     def _minkowski_distance(self, x1, x2, r=2):
         distance = 0.0
         for i in range(len(x1)):
-            distance += (abs(x1[i] - x2[i])) ** r
+            try:
+                diff = x1[i] - x2[i]
+                distance += abs(diff) ** r
+            except TypeError as te:
+                print(f"TypeError at index {i}: cannot subtract x2[{i}] from x1[{i}].")
+                print(f"  x1[{i}] type: {type(x1[i])}, x2[{i}] type: {type(x2[i])}")
+                print(f"  x1[{i}] = {x1[i]}, x2[{i}] = {x2[i]}")
+                raise te
+        
         return distance ** (1 / r)
