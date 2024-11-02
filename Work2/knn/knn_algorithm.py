@@ -40,12 +40,14 @@ class KnnAlgorithm:
 
         self.y_train_name = y_train.name
 
+    # https://en.wikipedia.org/w/index.php?title=Minkowski_distance&oldid=1237487001
     def _minkowski_distance(self, x1, x2, r=1):
         distance = 0.0
         for i in range(len(x1)):
             distance += (abs(x1[i] - x2[i])) ** r
         return distance ** (1 / r)
     
+    # https://en.wikipedia.org/wiki/Hamming_distance
     def _hamming_distance(self, x1, x2):
         distance = 0
         for i in range(len(x1)):
