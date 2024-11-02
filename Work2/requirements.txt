@@ -3,3 +3,4 @@ pandas
 tqdm
 scikit_posthocs
 numpy
+scipy
