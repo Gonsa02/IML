@@ -12,7 +12,6 @@ from data_preparation import CrossValidationDataLoader, DataProcessor
 parent_folder_path = os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, parent_folder_path)
-print("Parent folder path:", parent_folder_path)
 
 
 def run_knn_ir_experiment(ir_method):

@@ -80,3 +80,31 @@ Example:
 ```bash
 python main.py --experiment svm_ir --ir_method gcnn
 ```
+
+### Statistical Tests
+
+You can also run statistical tests on the results. Use the following option:
+
+```bash
+python main.py --stat_test <test_type>
+```
+
+Test Types
+- best_knn: Run statistical tests for the best KNN configuration.
+- best_svm: Run statistical tests for the best SVM configuration.
+- knn_vs_svm: Compare KNN and SVM configurations.
+- ir_knn: Compare instance reduction methods within KNN.
+- ir_svm: Compare instance reduction methods within SVM.
+
+#### Statistical Test Example
+
+To run a statistical test comparing the best KNN and SVM configurations:
+
+```bash
+python main.py --stat_test knn_vs_svm
+```
+
+### Notes
+
+- Specify either `--experiment` or `--stat_test`, not both.
+- When running `knn_ir` or `svm_ir` experiments, an `--ir_method` option is required.

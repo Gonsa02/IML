@@ -8,7 +8,6 @@ from tqdm import tqdm
 # Add parent folder to path
 parent_folder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, parent_folder_path)
-print("Parent folder path:", parent_folder_path)
 
 from data_preparation import CrossValidationDataLoader, DataProcessor
 from svm.svm_algorithm import svmAlgorithm
