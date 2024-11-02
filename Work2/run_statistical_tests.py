@@ -110,6 +110,7 @@ def perform_friedman_nemenyi_tests(data, top_configs, config_columns, title):
         plt.title(title)
         filename = os.path.join("results", title.lower().replace(" ", "_") + ".png")
         plt.savefig(filename)
+        plt.clf()
     else:
         print("No significant differences found among configurations")
 
@@ -332,6 +333,8 @@ def perform_statistical_analysis_instance_reduction(classifier_dfs, classifier_n
         # Nemenyi post-hoc test
         nemenyi_result = sp.posthoc_nemenyi_friedman(friedman_data)
         p_values = nemenyi_result.values[np.triu_indices_from(nemenyi_result, k=1)]
+        print("NEMENYI RESULTS ARE:")
+        print(nemenyi_result)
 
         # Holm's correction
         reject, pvals_corrected, _, _ = multipletests(p_values, method='holm')
@@ -351,7 +354,8 @@ def perform_statistical_analysis_instance_reduction(classifier_dfs, classifier_n
         sp.critical_difference_diagram(ranks, nemenyi_result_corrected)
         plt.title(title)
         filename = title.lower().replace(" ", "_") + ".png"
-        plt.savefig(filename)
+        plt.savefig("results/"+filename)
+        plt.clf()
 
     else:
         print("No significant differences found among classifiers.")
@@ -527,6 +531,6 @@ def run_statistical_tests(test_name):
     elif test_name == "knn_vs_svm":
         run_statistical_tests_svm_vs_knn()
     elif test_name == "ir_knn":
-        run_statistical_tests_instance_reduction_svm()
+        run_statistical_tests_instance_reduction_knn()
     elif test_name == "ir_svm":
         run_statistical_tests_instance_reduction_svm()
