@@ -4,7 +4,26 @@ This script allows you to run various machine learning experiments using K-Neare
 
 ## Requirements
 
-Make sure to install the necessary libraries before running the experiments. You can install them using:
+Make sure to install the necessary libraries before running the experiments.
+
+### Environment Setup
+
+It's recommended to create a Python 3.9 environment to ensure compatibility. You can set this up with either `conda` or `venv`:
+
+#### Using Conda
+
+```bash
+conda create -n experiment_runner python=3.9
+conda activate experiment_runner
+```
+
+#### Using venv
+```bash
+python3.9 -m venv env
+source env/bin/activate  # On Windows use `env\Scripts\activate`
+```
+
+Once the environment is activated, install the dependencies:
 
 ```bash
 pip install -r requirements.txt
