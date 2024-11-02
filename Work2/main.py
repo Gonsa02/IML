@@ -1,5 +1,4 @@
 import argparse
-import os
 
 from knn.run_knn_experiment import run_knn_experiment
 from svm.run_svm_experiment import run_svm_experiment
