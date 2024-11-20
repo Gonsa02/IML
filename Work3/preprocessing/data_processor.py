@@ -19,8 +19,6 @@ class DataProcessor:
         :return: Processed DataFrame with duplicates removed, numerical features standardized, and one-hot encoded categorical features.
         """
 
-        features_df = features_df.drop_duplicates()
-
         numerical_cols = features_df.select_dtypes(include=['int64', 'float64']).columns.tolist()
         categorical_cols = features_df.select_dtypes(include=['object']).columns.tolist()
 

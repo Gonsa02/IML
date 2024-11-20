@@ -11,11 +11,11 @@ class DataLoader:
     
     def load_arff_data(self, dataset_name):
         """
-        Load an ARFF file and return features and class labels separately.
+        Load an ARFF file, remove duplicates, and return features and class labels separately.
         Missing values are handled as NaN.
         Categorical data is decoded from bytes to strings.
         :param dataset_name: Name of the dataset (the filename without extension).
-        :return: A tuple (features_df, labels_series).
+        :return: A tuple (features_df, labels_series) without duplicates.
         """
 
         if dataset_name in ["vowel", "splice"]:
@@ -23,8 +23,8 @@ class DataLoader:
         elif dataset_name in ["satimage"]:
             class_column_name = "clase"
         else:
-            raise("error! unimplemented dataset")
-
+            raise ValueError("Error! Unimplemented dataset")
+        
         file_path = os.path.join("data", f"{dataset_name}.arff")
         try:
             data, meta = arff.loadarff(file_path)
@@ -41,6 +41,9 @@ class DataLoader:
         if class_column_name not in df.columns:
             print(f"Class column '{class_column_name}' not found in dataset '{dataset_name}'.")
             return df, None
+        
+        # We duplicates here so they are not in neither features nor labels
+        df = df.drop_duplicates()
         
         labels = df[class_column_name]
         features = df.drop(columns=[class_column_name])
