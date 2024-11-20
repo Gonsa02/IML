@@ -34,13 +34,10 @@ class DataLoader:
         
         df = pd.DataFrame(data)
         
-        # Convert bytes to strings for categorical data
         for col in df.select_dtypes([object]).columns:
-            # Avoid decoding the class column if it's of object type
             if col != class_column_name:
                 df[col] = df[col].apply(lambda x: x.decode('utf-8') if isinstance(x, bytes) else x)
         
-        # Separate features and labels
         if class_column_name not in df.columns:
             print(f"Class column '{class_column_name}' not found in dataset '{dataset_name}'.")
             return df, None
@@ -48,7 +45,6 @@ class DataLoader:
         labels = df[class_column_name]
         features = df.drop(columns=[class_column_name])
         
-        # Decode class labels if necessary
         if labels.dtype == object:
             labels = labels.apply(lambda x: x.decode('utf-8') if isinstance(x, bytes) else x)
         
