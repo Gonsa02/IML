@@ -1,15 +1,65 @@
 import os
-from joblib import Parallel, delayed
+from concurrent.futures import ProcessPoolExecutor, as_completed
 import pandas as pd
 import time
+from tqdm import tqdm
 from itertools import product
-from sklearn.metrics import silhouette_score, adjusted_rand_score, davies_bouldin_score, normalized_mutual_info_score
+from sklearn.metrics import silhouette_score, adjusted_rand_score, davies_bouldin_score
+from functools import partial
 
 from optics.optics import opticsAlgorithm
-from preprocessing import DataLoader, DataProcessor        
+from preprocessing import DataLoader, DataProcessor      
+from utils import save_optics_results
+
+# Function to Process Each Combination
+def process_combination(params, datasets):
+    dataset_name, metric, algorithm = params#, cluster_method, min_samples, eps = params
+
+    X = datasets[dataset_name]['df']
+    y = datasets[dataset_name]['labels']
+
+    # Run OPTICS Algorithm
+    total_time = None
+    try:  
+        start = time.time()
+        labels = opticsAlgorithm(X, metric, algorithm, n_jobs=1)
+        total_time = time.time() - start
+        
+    except Exception as e:
+        print(f"Error running OPTICS on dataset {dataset_name} with metric {metric} and algorithm {algorithm}: {e}")
+        return None
+
+    # Compute Metrics
+    try:
+        # Exclude noise points (-1) for silhouette and DBI
+        mask = labels != -1
+        if mask.sum() > 1 and len(set(labels[mask])) > 1:
+            silhouette = silhouette_score(X[mask], labels[mask])
+            dbi = davies_bouldin_score(X[mask], labels[mask])
+        else:
+            silhouette = 'NAN'
+            dbi = 'NAN'
+
+        ari = adjusted_rand_score(y, labels)
+
+    except Exception as e:
+        print(f"Error computing metrics for dataset {dataset_name}: {e}")
+        silhouette = ari = dbi = 'NAN'
+
+    result_entry = {
+        'Dataset': dataset_name,
+        'Metric': metric,
+        'Algorithm': algorithm,
+        'Silhouette': silhouette,
+        'ARI': ari,
+        'DBI': dbi,
+        'Time (s)': total_time
+    }
+
+    return result_entry
 
 def run_optics():
-    # Initialize DataLoader
+    # Initialize DataLoader and DataProcessor
     data_loader = DataLoader()
     data_processor = DataProcessor()
 
@@ -46,77 +96,56 @@ def run_optics():
     # Additional Parameters
     cluster_methods = ['xi', 'dbscan']
     min_samples_list = [5, 10]
+    eps_list = [0.5, 1.0, 1.5]
 
     # Prepare All Parameter Combinations
     parameter_combinations = list(product(
-        datasets.keys(), metrics, algorithms, cluster_methods, min_samples_list
+        datasets.keys(), metrics, algorithms#, cluster_methods, min_samples_list, eps_list
     ))
 
-    # Function to Process Each Parameter Combination
-    def process_combination(params):
-        dataset_name, metric, algorithm, cluster_method, min_samples = params
+    # Load Existing Results
+    try:
+        optics_csv_file = 'results/optics_results.csv'
+        optics_df = pd.read_csv(optics_csv_file)
+    except FileNotFoundError:
+        optics_df = pd.DataFrame()
 
-        X = datasets[dataset_name]['df']
-        y = datasets[dataset_name]['labels']
+    # Build Set of Existing Combinations
+    if not optics_df.empty:
+        existing_combinations = set(zip(
+        optics_df['Dataset'], optics_df['Metric'], optics_df['Algorithm']
+        ))
+    else:
+        existing_combinations = set()
 
-        # Run OPTICS Algorithm
-        total_time = None
-        try:  
-            start = time.time()
-            labels = opticsAlgorithm(X, metric, algorithm, cluster_method, min_samples, n_jobs=1)
-            total_time = time.time() - start
-            
-        except Exception as e:
-            print(f"Error running OPTICS on dataset {dataset_name} with metric {metric}, algorithm {algorithm}, "
-                  f"cluster method {cluster_method}, and min samples {min_samples}: {e}")
-            return None
+    # Filter Out Already Processed Combinations
+    parameter_combinations = [params for params in parameter_combinations if params not in existing_combinations]
+
+    total_combinations = len(parameter_combinations)
+    print(f"Total combinations to run: {total_combinations}")
+
+    # Prepare the partial function with datasets
+    process_func = partial(process_combination, datasets=datasets)
     
-        # Compute Metrics
-        try:
-            # Exclude noise points (-1) for silhouette and DBI
-            mask = labels != -1
-            if mask.sum() > 1 and len(set(labels[mask])) > 1:
-                silhouette = silhouette_score(X[mask], labels[mask])
-                dbi = davies_bouldin_score(X[mask], labels[mask])
-            else:
-                silhouette = float('nan')
-                dbi = float('nan')
-
-            ari = adjusted_rand_score(y, labels)
-            #purity = compute_purity(y, labels)
-            nmi = normalized_mutual_info_score(y, labels)
-        except Exception as e:
-            print(f"Error computing metrics for dataset {dataset_name}: {e}")
-            silhouette = ari = dbi = nmi = float('nan')
-    
-        result_entry = {
-            'Dataset': dataset_name,
-            'Metric': metric,
-            'Algorithm': algorithm,
-            'Cluster_Method': cluster_method,
-            'Min_Samples': min_samples,
-            'Silhouette': silhouette,
-            'ARI': ari,
-            #'Purity': purity,
-            'DBI': dbi,
-            'NMI': nmi,
-            'Time (s)': total_time
-        }
-
-        return result_entry
-
     # Run Parameter Combinations in Parallel
-    results = Parallel(n_jobs=-1, backend='threading')(
-        delayed(process_combination)(params) for params in parameter_combinations
-    )
+    with ProcessPoolExecutor() as executor:
+        futures = {executor.submit(process_func, params): params for params in parameter_combinations}
 
-    # Filter out None results (failed combinations)
-    print(f"Number of failed combinations (None results): {sum(res is None for res in results)}")
-    results = [res for res in results if res is not None]
+        for future in tqdm(as_completed(futures), total=total_combinations, desc='Experiments'):
+            params = futures[future]
+            try:
+                result = future.result()
+                # Save Result to CSV file
+                save_optics_results(result, optics_csv_file)
+            except Exception as e:
+                print(f'Combination {params} generated an exception: {e}')
 
-    # Save Results
-    results_df = pd.DataFrame(results)
-    os.makedirs('results', exist_ok=True)
-    results_filename = 'results/optics_results.csv'
-    results_df.to_csv(results_filename, index=False)
-    print(f"Results have been saved to '{results_filename}'")
+    # Sort CSV
+    optics_sort_csv()
+
+def optics_sort_csv():
+    optics_csv_file = 'results/optics_results.csv'
+    df = pd.read_csv(optics_csv_file)
+    sort_columns = ['Dataset', 'Metric', 'Algorithm']
+    df_sorted = df.sort_values(by=sort_columns, ascending=True, ignore_index=True)
+    df_sorted.to_csv(optics_csv_file, index=False)
