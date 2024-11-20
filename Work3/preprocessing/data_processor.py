@@ -13,11 +13,13 @@ class DataProcessor:
 
     def preprocess_dataset(self, features_df):
         """
-        Preprocess the dataset by one-hot encoding categorical features and standardizing numerical features.
+        Preprocess the dataset by deleting duplicates, one-hot encoding categorical features, and standardizing numerical features.
         Handles datasets with only numerical features, only categorical features, or both.
         :param features_df: DataFrame containing the features.
-        :return: Processed DataFrame with numerical features standardized and one-hot encoded categorical features.
+        :return: Processed DataFrame with duplicates removed, numerical features standardized, and one-hot encoded categorical features.
         """
+
+        features_df = features_df.drop_duplicates()
 
         numerical_cols = features_df.select_dtypes(include=['int64', 'float64']).columns.tolist()
         categorical_cols = features_df.select_dtypes(include=['object']).columns.tolist()

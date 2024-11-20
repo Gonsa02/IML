@@ -3,21 +3,21 @@ import numpy as np
 
 class Distances:
     @staticmethod
-    def _minkowski_distance(x, centroid, r=1):
-        return np.sum((abs(x-centroid))**r)**(1/r)
+    def _minkowski_distance(X, centroid, r=1):
+        return np.sum(np.abs(X-centroid)**r, axis=1)**(1/r)
 
     @staticmethod
-    def manhattan(x, centroid):
-        return Distances._minkowski_distance(x, centroid, r=1)
+    def manhattan(X, centroid):
+        return Distances._minkowski_distance(X, centroid, r=1)
 
     @staticmethod
-    def euclidean(x, centroid):
-        return Distances._minkowski_distance(x, centroid, r=2)
+    def euclidean(X, centroid):
+        return Distances._minkowski_distance(X, centroid, r=2)
 
     @staticmethod
-    def cosine_distance(x, centroid):
-        similarity = np.dot(x, centroid) / \
-            (np.linalg.norm(x) * np.linalg.norm(centroid))
+    def cosine_distance(X, centroid):
+        similarity = np.dot(X, centroid) / (np.linalg.norm(X,
+                                                           axis=1) * np.linalg.norm(centroid))
         return 1-similarity
 
 
