@@ -1,65 +1,146 @@
 import os
+from joblib import Parallel, delayed
 import pandas as pd
-from sklearn.metrics import silhouette_score, adjusted_rand_score, f1_score, davies_bouldin_score
 import time
-from tqdm import tqdm
+from itertools import product
+from sklearn.metrics import silhouette_score, adjusted_rand_score, davies_bouldin_score, normalized_mutual_info_score
 
 from optics.optics import opticsAlgorithm
-
+from preprocessing import DataLoader, DataProcessor        
 
 def run_optics():
-    # Load and preprocess data
-    # ...
+    # Initialize DataLoader
+    data_loader = DataLoader()
+    data_processor = DataProcessor()
+
+    # Load Datasets
+    df_satimage, labels_satimage = data_loader.load_arff_data('satimage')
+    df_splice, labels_splice = data_loader.load_arff_data('splice')
+    df_vowel, labels_vowel = data_loader.load_arff_data('vowel')
+
+    # Preprocess Datasets
+    df_satimage = data_processor.preprocess_dataset(df_satimage)
+    df_splice   = data_processor.preprocess_dataset(df_splice)
+    df_vowel    = data_processor.preprocess_dataset(df_vowel)
+
+    # Organize Datasets Into a Dictionary
+    datasets = {
+        'satimage': {
+            'df': df_satimage,
+            'labels': labels_satimage
+        },
+        'splice': {
+            'df': df_splice,
+            'labels': labels_splice
+        },
+        'vowel': {
+            'df': df_vowel,
+            'labels': labels_vowel
+        }
+    }
 
     # Parameter Lists
-    metrics = ['euclidean', 'cosine', 'l1'] # 'euclidean', 'cosine', 'l1', 'l2', 'manhattan', 'cityblock'. There are more with scipy.spatial.distance
-    algorithms = ['ball_tree', 'kd_tree']   # There exists 'auto', 'ball_tree', 'kd_tree', and 'brute'.
-    # Other params: Set defaults or make a study?
-
-    # Prepare combinations
-    parameter_combinations = []
-    for dataset_name in ['SatImage', 'Splice', 'Vowel']:
-        for metric in metrics:
-            for algorithm in algorithms:
-                parameter_combinations.append((dataset_name, metric, algorithm))
-
-    # Save results
-    results = []
-
-    for dataset_name, metric, algorithm in tqdm(parameter_combinations):
-        # ...
-
-        # Obtain labels and track time
-        start = time.time()
-        labels = opticsAlgorithm(X, metric, algorithm)
-        end = time.time()
-        total_time = end - start
+    metrics = ['euclidean', 'manhattan', 'chebyshev']
+    algorithms = ['ball_tree', 'kd_tree']
     
-        # Calculate Metrics # ToDo: Choose which metrics to use
-        silhouette = silhouette_score
-        ari = adjusted_rand_score
-        purity = 1
-        dbi = davies_bouldin_score
-        f_measure = 1
+    # Additional Parameters
+    cluster_methods = ['xi', 'dbscan']
+    min_samples_list = [5, 10]
 
+    # Prepare All Parameter Combinations
+    parameter_combinations = list(product(
+        datasets.keys(), metrics, algorithms, cluster_methods, min_samples_list
+    ))
+
+    # Function to Process Each Parameter Combination
+    def process_combination(params):
+        dataset_name, metric, algorithm, cluster_method, min_samples = params
+
+        X = datasets[dataset_name]['df']
+        y = datasets[dataset_name]['labels']
+
+        # Run OPTICS Algorithm
+        total_time = None
+        try:  
+            start = time.time()
+            labels = opticsAlgorithm(X, metric, algorithm, cluster_method, min_samples, n_jobs=1)
+            total_time = time.time() - start
+            
+        except Exception as e:
+            print(f"Error running OPTICS on dataset {dataset_name} with metric {metric}, algorithm {algorithm}, "
+                  f"cluster method {cluster_method}, and min samples {min_samples}: {e}")
+            return None
+    
+        # Compute Metrics
+        try:
+            # Exclude noise points (-1) for silhouette and DBI
+            mask = labels != -1
+            if mask.sum() > 1 and len(set(labels[mask])) > 1:
+                silhouette = silhouette_score(X[mask], labels[mask])
+                dbi = davies_bouldin_score(X[mask], labels[mask])
+            else:
+                silhouette = float('nan')
+                dbi = float('nan')
+
+            ari = adjusted_rand_score(y, labels)
+            #purity = compute_purity(y, labels)
+            nmi = normalized_mutual_info_score(y, labels)
+        except Exception as e:
+            print(f"Error computing metrics for dataset {dataset_name}: {e}")
+            silhouette = ari = dbi = nmi = float('nan')
     
         result_entry = {
             'Dataset': dataset_name,
             'Metric': metric,
             'Algorithm': algorithm,
+            'Cluster_Method': cluster_method,
+            'Min_Samples': min_samples,
+            'Silhouette': silhouette,
             'ARI': ari,
-            'Purity': purity,
+            #'Purity': purity,
             'DBI': dbi,
-            'F-measure': f_measure,
+            'NMI': nmi,
             'Time (s)': total_time
         }
-    
-        results.append(result_entry)
 
+        return result_entry
 
-    # Save results
+    # Run Parameter Combinations in Parallel
+    results = Parallel(n_jobs=-1, backend='threading')(
+        delayed(process_combination)(params) for params in parameter_combinations
+    )
+
+    # Filter out None results (failed combinations)
+    print(f"Number of failed combinations (None results): {sum(res is None for res in results)}")
+    results = [res for res in results if res is not None]
+
+    # Save Results
     results_df = pd.DataFrame(results)
     os.makedirs('results', exist_ok=True)
     results_filename = 'results/optics_results.csv'
     results_df.to_csv(results_filename, index=False)
     print(f"Results have been saved to '{results_filename}'")
+
+def omain():
+    # Initialize DataLoader
+    data_loader = DataLoader()
+    data_processor = DataProcessor()
+
+    # Load Datasets
+    df_satimage, labels_satimage = data_loader.load_arff_data('satimage')
+    df_splice, labels_splice = data_loader.load_arff_data('splice')
+    df_vowel, labels_vowel = data_loader.load_arff_data('vowel')
+
+    # Preprocess Datasets
+    df_satimage = data_processor.preprocess_dataset(df_satimage)
+    df_splice   = data_processor.preprocess_dataset(df_splice)
+    df_vowel    = data_processor.preprocess_dataset(df_vowel)
+
+    duplicates = df_satimage.duplicated().sum()
+    print(f"Number of duplicate rows in satimage dataset: {duplicates}")
+
+    duplicates = df_splice.duplicated().sum()
+    print(f"Number of duplicate rows in splice dataset: {duplicates}")
+
+    duplicates = df_vowel.duplicated().sum()
+    print(f"Number of duplicate rows in vowel dataset: {duplicates}")
