@@ -1,6 +1,6 @@
 import argparse
 
-from optics.run_optics import run_optics, omain
+from optics.run_optics import run_optics
 
 def main():
     parser = argparse.ArgumentParser(description='Run experiments')

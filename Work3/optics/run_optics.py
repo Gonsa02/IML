@@ -120,27 +120,3 @@ def run_optics():
     results_filename = 'results/optics_results.csv'
     results_df.to_csv(results_filename, index=False)
     print(f"Results have been saved to '{results_filename}'")
-
-def omain():
-    # Initialize DataLoader
-    data_loader = DataLoader()
-    data_processor = DataProcessor()
-
-    # Load Datasets
-    df_satimage, labels_satimage = data_loader.load_arff_data('satimage')
-    df_splice, labels_splice = data_loader.load_arff_data('splice')
-    df_vowel, labels_vowel = data_loader.load_arff_data('vowel')
-
-    # Preprocess Datasets
-    df_satimage = data_processor.preprocess_dataset(df_satimage)
-    df_splice   = data_processor.preprocess_dataset(df_splice)
-    df_vowel    = data_processor.preprocess_dataset(df_vowel)
-
-    duplicates = df_satimage.duplicated().sum()
-    print(f"Number of duplicate rows in satimage dataset: {duplicates}")
-
-    duplicates = df_splice.duplicated().sum()
-    print(f"Number of duplicate rows in splice dataset: {duplicates}")
-
-    duplicates = df_vowel.duplicated().sum()
-    print(f"Number of duplicate rows in vowel dataset: {duplicates}")
