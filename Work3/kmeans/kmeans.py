@@ -22,31 +22,79 @@ class Distances:
 
 
 class KMeans:
-    def __init__(self, k=2, max_iters=30, distance='Euclidean', seed=0):
+
+    def __init__(self, k=2, max_iters=30, distance='euclidean', seed=0, verbose=False):
         self.k = k
         self.max_iters = max_iters
         self.distance = KMeans._get_distance(distance)
         self.seed = seed
+        self.verbose = verbose
 
-        self.centroids_idxs = []
+        self.centroids = []
 
     @staticmethod
     def _get_distance(distance):
-        if distance == 'Manhattan':
+        if distance == 'manhattan':
             return Distances.manhattan
-        elif distance == 'Euclidean':
+        elif distance == 'euclidean':
             return Distances.euclidean
-        else:
+        elif distance == 'cosine':
             return Distances.cosine_distance
+        else:
+            raise ValueError(
+                "Unsupported distance metric. Choose 'euclidean', 'manhattan', or 'cosine'.")
 
-    def _assign_samples(X):
-        return
+    def _assign_samples(self, X):
+        distances = np.array([self.distance(X, centroid)
+                             for centroid in self.centroids])
+        return np.argmin(distances, axis=0)
 
-    def _update_centroids():
-        return
+    def _check_convergence(self, new_centroids):
+        return np.allclose(self.centroids, new_centroids)
+
+    def _update_centroids(self, X, labels):
+        new_centroids = np.zeros_like(self.centroids)
+        for i in range(self.k):
+            cluster_samples = X[labels == i]
+            new_centroids[i] = cluster_samples.mean(axis=0)
+        return new_centroids
 
     def fit(self, X):
         np.random.seed(self.seed)
 
+        X = np.array(X)
+
         # Centroid initialization
-        self.centroids_idxs = np.random.choice(X.shape[0], self.k)
+        centroids_idx = np.random.choice(X.shape[0], self.k, replace=False)
+        self.centroids = X[centroids_idx]
+
+        labels = []
+        for i in range(self.max_iters):
+            if self.verbose:
+                print(f"Iteration: {i}/{self.max_iters}")
+
+            labels = self._assign_samples(X)
+            new_centroids = self._update_centroids(X, labels)
+            if self._check_convergence(self.centroids, new_centroids):
+                if (self.verbose):
+                    print(f"Converged at iteration {i+1}")
+                break
+
+            self.centroids = new_centroids
+            if (i == self.max_iters-1):
+                print(f"No convergence")
+
+        return labels
+
+    def predict(self, X):
+        if self.centroids is None:
+            raise Exception("Model has not been fitted yet.")
+
+        X = np.array(X)
+        return self._assign_samples(X)
+
+    def get_centroids(self):
+        if self.centroids is None:
+            raise Exception("Model has not been fitted yet.")
+
+        return self.centroids
