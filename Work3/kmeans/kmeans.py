@@ -1,4 +1,5 @@
 import numpy as np
+from collections import Counter
 
 
 class Distances:
@@ -30,7 +31,7 @@ class KMeans:
         self.seed = seed
         self.verbose = verbose
 
-        self.centroids = []
+        self.centroids = None
 
     @staticmethod
     def _get_distance(distance):
@@ -49,17 +50,22 @@ class KMeans:
                              for centroid in self.centroids])
         return np.argmin(distances, axis=0)
 
+    # change tolerance
     def _check_convergence(self, new_centroids):
-        return np.allclose(self.centroids, new_centroids)
+        return np.allclose(self.centroids, new_centroids, atol=1e-5)
 
     def _update_centroids(self, X, labels):
         new_centroids = np.zeros_like(self.centroids)
         for i in range(self.k):
             cluster_samples = X[labels == i]
-            new_centroids[i] = cluster_samples.mean(axis=0)
+            if len(cluster_samples) > 0:
+                new_centroids[i] = cluster_samples.mean(axis=0)
+            else:
+                # In case a cluster does not have any sample, reassign
+                new_centroids[i] = X[np.random.randint(0, X.shape[0])]
         return new_centroids
 
-    def fit(self, X):
+    def fit_predict(self, X):
         np.random.seed(self.seed)
 
         X = np.array(X)
@@ -68,14 +74,15 @@ class KMeans:
         centroids_idx = np.random.choice(X.shape[0], self.k, replace=False)
         self.centroids = X[centroids_idx]
 
-        labels = []
         for i in range(self.max_iters):
             if self.verbose:
                 print(f"Iteration: {i}/{self.max_iters}")
 
             labels = self._assign_samples(X)
+
+            # Update centroids based on current assignments
             new_centroids = self._update_centroids(X, labels)
-            if self._check_convergence(self.centroids, new_centroids):
+            if self._check_convergence(new_centroids):
                 if (self.verbose):
                     print(f"Converged at iteration {i+1}")
                 break
@@ -98,3 +105,27 @@ class KMeans:
             raise Exception("Model has not been fitted yet.")
 
         return self.centroids
+
+    @staticmethod
+    def compute_accuracy(predicted_labels, true_labels):
+        predicted_labels = np.array(predicted_labels)
+        true_labels = np.array(true_labels)
+
+        label_mapping = {}
+        clusters = np.unique(predicted_labels)
+
+        for c in clusters:
+            samples_idxs = np.where(predicted_labels == c)
+
+            true_labels_cluster = true_labels[samples_idxs]
+            if len(true_labels_cluster) > 0:
+                label_mapping[c] = Counter(
+                    true_labels_cluster).most_common(1)[0][0]
+            else:
+                label_mapping[c] = -1
+
+        matched_predicted_labels = np.array(
+            [label_mapping[c] for c in predicted_labels])
+
+        accuracy = np.mean(matched_predicted_labels == true_labels)
+        return accuracy
