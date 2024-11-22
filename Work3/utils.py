@@ -13,9 +13,11 @@ def save_optics_results(data_row, csv_file):
         'Dataset',
         'Metric',
         'Algorithm',
+        'Min Samples',
         'Silhouette',
         'ARI',
         'DBI',
+        'Num Clusters',
         'Time (s)'
     ]
 

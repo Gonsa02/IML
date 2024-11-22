@@ -11,9 +11,26 @@ from optics.optics import opticsAlgorithm
 from preprocessing import DataLoader, DataProcessor      
 from utils import save_optics_results
 
+# Define a function to check sparsity
+def check_sparsity(df, threshold=0.5):
+    """
+    Check if the dataset is sparse based on the proportion of zeros.
+    
+    Parameters:
+    - df (pd.DataFrame): The dataset to check.
+    - threshold (float): The threshold proportion to consider a dataset as sparse.
+    
+    Returns:
+    - is_sparse (bool): True if dataset is sparse, False otherwise.
+    - zero_proportion (float): The proportion of zeros in the dataset.
+    """
+    zero_proportion = (df.values == 0).mean()
+    is_sparse = zero_proportion > threshold
+    return is_sparse, zero_proportion
+
 # Function to Process Each Combination
 def process_combination(params, datasets):
-    dataset_name, metric, algorithm = params#, cluster_method, min_samples, eps = params
+    dataset_name, metric, algorithm, min_samples = params#, cluster_method, min_samples, eps = params
 
     X = datasets[dataset_name]['df']
     y = datasets[dataset_name]['labels']
@@ -22,11 +39,15 @@ def process_combination(params, datasets):
     total_time = None
     try:  
         start = time.time()
-        labels = opticsAlgorithm(X, metric, algorithm, n_jobs=1)
+        labels = opticsAlgorithm(X, metric, algorithm, min_samples, n_jobs=1)
         total_time = time.time() - start
+
+        # Compute Number of Clusters (excluding noise)
+        unique_labels = set(labels)
+        n_clusters = len(unique_labels) - (1 if -1 in unique_labels else 0)
         
     except Exception as e:
-        print(f"Error running OPTICS on dataset {dataset_name} with metric {metric} and algorithm {algorithm}: {e}")
+        print(f"Error running OPTICS on dataset '{dataset_name}' with metric '{metric}', algorithm '{algorithm}', and min_samples '{min_samples}': {e}")
         return None
 
     # Compute Metrics
@@ -37,22 +58,24 @@ def process_combination(params, datasets):
             silhouette = silhouette_score(X[mask], labels[mask])
             dbi = davies_bouldin_score(X[mask], labels[mask])
         else:
-            silhouette = 'NAN'
-            dbi = 'NAN'
+            silhouette = 'NA'
+            dbi = 'NA'
 
         ari = adjusted_rand_score(y, labels)
 
     except Exception as e:
         print(f"Error computing metrics for dataset {dataset_name}: {e}")
-        silhouette = ari = dbi = 'NAN'
+        silhouette = ari = dbi = n_clusters = 'NA'
 
     result_entry = {
         'Dataset': dataset_name,
         'Metric': metric,
         'Algorithm': algorithm,
+        'Min Samples': min_samples,
         'Silhouette': silhouette,
         'ARI': ari,
         'DBI': dbi,
+        'Num Clusters': n_clusters,
         'Time (s)': total_time
     }
 
@@ -90,17 +113,16 @@ def run_optics():
     }
 
     # Parameter Lists
-    metrics = ['euclidean', 'manhattan', 'chebyshev']
-    algorithms = ['ball_tree', 'kd_tree']
+    metrics = ['euclidean', 'manhattan', 'chebyshev'] # Only need to select 3
+    algorithms = ['ball_tree', 'kd_tree', 'brute'] # Only need to select 2
     
     # Additional Parameters
-    cluster_methods = ['xi', 'dbscan']
-    min_samples_list = [5, 10]
-    eps_list = [0.5, 1.0, 1.5]
+    min_samples_list = [3, 5, 10, 20]
+    #eps_list = [0.5, 1.0, 1.5]
 
     # Prepare All Parameter Combinations
     parameter_combinations = list(product(
-        datasets.keys(), metrics, algorithms#, cluster_methods, min_samples_list, eps_list
+        datasets.keys(), metrics, algorithms, min_samples_list#, cluster_methods, min_samples_list, eps_list
     ))
 
     # Load Existing Results
@@ -113,7 +135,7 @@ def run_optics():
     # Build Set of Existing Combinations
     if not optics_df.empty:
         existing_combinations = set(zip(
-        optics_df['Dataset'], optics_df['Metric'], optics_df['Algorithm']
+        optics_df['Dataset'], optics_df['Metric'], optics_df['Algorithm'], optics_df['Min Samples']
         ))
     else:
         existing_combinations = set()
@@ -146,6 +168,6 @@ def run_optics():
 def optics_sort_csv():
     optics_csv_file = 'results/optics_results.csv'
     df = pd.read_csv(optics_csv_file)
-    sort_columns = ['Dataset', 'Metric', 'Algorithm']
+    sort_columns = ['Dataset', 'Metric', 'Algorithm', 'Min Samples']
     df_sorted = df.sort_values(by=sort_columns, ascending=True, ignore_index=True)
     df_sorted.to_csv(optics_csv_file, index=False)

@@ -101,7 +101,7 @@ def run_spectral():
     n_neighbors_list = [3, 5, 10, 15, 20, 25] # Ignored for 'rbf'. ToDo: How many values?
     
     # Additional Parameters
-    n_clusters_list = [8, 13] #list(range(2, 16))
+    n_clusters_list = [3, 5, 8, 13] #list(range(2, 16))
 
     # Prepare All Parameter Combinations
     parameter_combinations = []
