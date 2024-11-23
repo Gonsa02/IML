@@ -133,4 +133,5 @@ def kmeans_sort_csv():
     df_sorted.to_csv(optics_csv_file, index=False)
 
 
-run_kmeans()
+if __name__ == "__main__":
+    run_kmeans()
