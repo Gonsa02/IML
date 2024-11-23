@@ -65,14 +65,17 @@ class KMeans:
                 new_centroids[i] = X[np.random.randint(0, X.shape[0])]
         return new_centroids
 
-    def fit_predict(self, X):
+    def fit_predict(self, X, initial_centroids=None):
         np.random.seed(self.seed)
 
         X = np.array(X)
 
         # Centroid initialization
-        centroids_idx = np.random.choice(X.shape[0], self.k, replace=False)
-        self.centroids = X[centroids_idx]
+        if initial_centroids is None:
+            centroids_idx = np.random.choice(X.shape[0], self.k, replace=False)
+            self.centroids = X[centroids_idx]
+        else:
+            self.centroids = initial_centroids
 
         for i in range(self.max_iters):
             if self.verbose:
