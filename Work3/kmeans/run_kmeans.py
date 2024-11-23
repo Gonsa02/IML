@@ -1,4 +1,6 @@
 import time
+import os
+import sys
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
@@ -6,10 +8,9 @@ from functools import partial
 from itertools import product
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
-
-from kmeans import Distance, KMeans
-from preprocessing import DataLoader, DataProcessor
 from utils import save_kmeans_results
+from preprocessing import DataLoader, DataProcessor
+from .kmeans import KMeans
 
 
 def process_combination(params, datasets):
@@ -78,7 +79,7 @@ def run_kmeans():
     # Parameter Lists
     k_values = np.arange(2, 16)
     distance_metrics = ['euclidean', 'manhattan', 'cosine']
-    seeds = [0, 42, 12, 36, 5, 20, 15, 100]
+    seeds = [0, 42, 36]
 
     parameter_combinations = list(product(
         datasets.keys(), k_values, distance_metrics, seeds
@@ -108,7 +109,8 @@ def run_kmeans():
     process_func = partial(process_combination, datasets=datasets)
 
     with ProcessPoolExecutor() as executor:
-        futures = {executor.submit(process_func, params): params for params in parameter_combinations}
+        futures = {executor.submit(process_func, params)
+                                   : params for params in parameter_combinations}
 
         for future in tqdm(as_completed(futures), total=total_combinations, desc='Experiments'):
             params = futures[future]
@@ -129,3 +131,6 @@ def kmeans_sort_csv():
     df_sorted = df.sort_values(
         by=sort_columns, ascending=True, ignore_index=True)
     df_sorted.to_csv(optics_csv_file, index=False)
+
+
+run_kmeans()
