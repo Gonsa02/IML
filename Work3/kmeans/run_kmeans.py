@@ -6,6 +6,7 @@ import numpy as np
 from tqdm import tqdm
 from functools import partial
 from itertools import product
+from sklearn.metrics import adjusted_rand_score, davies_bouldin_score, silhouette_score
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 from utils import save_kmeans_results
@@ -26,7 +27,10 @@ def process_combination(params, datasets):
         start = time.time()
         predictions = kmeans.fit_predict(X)
         total_time = time.time() - start
-        accuracy = KMeans.compute_accuracy(predictions, y)
+
+        ari = adjusted_rand_score(y, predictions)
+        scoef = silhouette_score(X, predictions)
+        dbi = davies_bouldin_score(X, predictions)
 
     except Exception as e:
         print(f"""Error running KMeans on dataset {dataset_name} with k {k} and distance {
@@ -38,7 +42,9 @@ def process_combination(params, datasets):
         'k': k,
         'Distance': distance,
         'Seed': seed,
-        'Accuracy': accuracy,
+        'ARI': ari,
+        'Silhouette': scoef,
+        'DBI': dbi,
         'Time (s)': total_time
     }
 
@@ -95,7 +101,7 @@ def run_kmeans():
     # Build Set of Existing Combinations
     if not kmeans_df.empty:
         existing_combinations = set(zip(
-            kmeans_df['Dataset'], kmeans_df['K'], kmeans_df['Distance'], kmeans_df['Seed']
+            kmeans_df['Dataset'], kmeans_df['k'], kmeans_df['Distance'], kmeans_df['Seed']
         ))
     else:
         existing_combinations = set()
