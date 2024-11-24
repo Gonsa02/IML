@@ -32,6 +32,7 @@ class KMeans:
         self.verbose = verbose
 
         self.centroids = None
+        self.iterations = None
 
     @staticmethod
     def _get_distance(distance):
@@ -86,14 +87,18 @@ class KMeans:
             # Update centroids based on current assignments
             new_centroids = self._update_centroids(X, labels)
             if self._check_convergence(new_centroids):
+                self.iterations = i
                 if (self.verbose):
                     print(f"Converged at iteration {i+1}")
                 break
 
             self.centroids = new_centroids
             if (i == self.max_iters-1):
-                print(f"No convergence")
+                self.iterations = self.max_iters
+                if (self.verbose):
+                    print(f"No convergence")
 
+        labels = self._assign_samples(X)
         return labels
 
     def predict(self, X):
@@ -108,6 +113,12 @@ class KMeans:
             raise Exception("Model has not been fitted yet.")
 
         return self.centroids
+
+    def get_iterations(self):
+        if self.iterations is None:
+            raise Exception("Model has not been fitted yet.")
+
+        return self.iterations
 
     @staticmethod
     def compute_accuracy(predicted_labels, true_labels):

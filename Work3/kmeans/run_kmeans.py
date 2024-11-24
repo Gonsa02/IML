@@ -24,13 +24,15 @@ def process_combination(params, datasets):
     total_time = None
     try:
         kmeans = KMeans(k=k, distance=distance, seed=seed)
-        start = time.time()
+        # start = time.time()
         predictions = kmeans.fit_predict(X)
-        total_time = time.time() - start
+        # total_time = time.time() - start
 
         ari = adjusted_rand_score(y, predictions)
         scoef = silhouette_score(X, predictions)
         dbi = davies_bouldin_score(X, predictions)
+        accuracy = kmeans.compute_accuracy(predictions, y)
+        iterations = kmeans.get_iterations()
 
     except Exception as e:
         print(f"""Error running KMeans on dataset {dataset_name} with k {k} and distance {
@@ -45,7 +47,9 @@ def process_combination(params, datasets):
         'ARI': ari,
         'Silhouette': scoef,
         'DBI': dbi,
-        'Time (s)': total_time
+        'Accuracy': accuracy,
+        'Iterations': iterations
+        # 'Time (s)': total_time
     }
 
     return result_entry
@@ -82,14 +86,26 @@ def run_kmeans():
         }
     }
 
-    # Parameter Lists
-    k_values = np.arange(2, 16)
-    distance_metrics = ['euclidean', 'manhattan', 'cosine']
-    seeds = [0, 42, 36]
+    k_values = {
+        'satimage': np.arange(2, 9),    # 6 true classes
+        'splice': np.arange(2, 6),      # 3 true classes
+        'vowel': np.arange(2, 15)       # 11 true classes
+    }
 
-    parameter_combinations = list(product(
-        datasets.keys(), k_values, distance_metrics, seeds
-    ))
+    # Parameter Lists
+    # k_values = np.arange(2, 12)
+    distance_metrics = ['euclidean', 'manhattan', 'cosine']
+    seeds = [0, 42, 36, 12, 55, 100, 67, 24, 79, 33]
+
+    parameter_combinations = []
+    for dataset_name, k_values in k_values.items():
+        combinations = product(
+            [dataset_name], k_values, distance_metrics, seeds
+        )
+        parameter_combinations.extend(combinations)
+    # parameter_combinations = list(product(
+    #     datasets.keys(), k_values, distance_metrics, seeds
+    # ))
 
     # Load Existing Results
     try:
