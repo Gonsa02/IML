@@ -51,8 +51,8 @@ class GSFuzzyCMeans:
             if np.linalg.norm(self.U - U_old) < self.error:
                 # print(f"Converged at iteration {self.n_iter_}")
                 break
-        else:
-            print(f"Reached maximum iterations ({self.max_iter}) without convergence.")
+        # else:
+            # print(f"Reached maximum iterations ({self.max_iter}) without convergence.")
 
         return self
 
