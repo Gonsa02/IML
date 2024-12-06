@@ -8,29 +8,12 @@ from sklearn.metrics import silhouette_score, adjusted_rand_score, davies_bouldi
 from functools import partial
 
 from optics.optics import opticsAlgorithm
-from preprocessing import DataLoader, DataProcessor      
-from utils import save_optics_results
-
-# Define a function to check sparsity
-def check_sparsity(df, threshold=0.5):
-    """
-    Check if the dataset is sparse based on the proportion of zeros.
-    
-    Parameters:
-    - df (pd.DataFrame): The dataset to check.
-    - threshold (float): The threshold proportion to consider a dataset as sparse.
-    
-    Returns:
-    - is_sparse (bool): True if dataset is sparse, False otherwise.
-    - zero_proportion (float): The proportion of zeros in the dataset.
-    """
-    zero_proportion = (df.values == 0).mean()
-    is_sparse = zero_proportion > threshold
-    return is_sparse, zero_proportion
+from preprocessing import DataLoader, DataProcessor
+from utils import save_optics_results, purity_score
 
 # Function to Process Each Combination
 def process_combination(params, datasets):
-    dataset_name, metric, algorithm, min_samples = params#, cluster_method, min_samples, eps = params
+    dataset_name, metric, algorithm, min_samples = params
 
     X = datasets[dataset_name]['df']
     y = datasets[dataset_name]['labels']
@@ -62,10 +45,11 @@ def process_combination(params, datasets):
             dbi = 'NA'
 
         ari = adjusted_rand_score(y, labels)
+        purity = purity_score(y, labels)
 
     except Exception as e:
         print(f"Error computing metrics for dataset {dataset_name}: {e}")
-        silhouette = ari = dbi = n_clusters = 'NA'
+        silhouette = ari = dbi = purity = n_clusters = 'NA'
 
     result_entry = {
         'Dataset': dataset_name,
@@ -75,6 +59,7 @@ def process_combination(params, datasets):
         'Silhouette': silhouette,
         'ARI': ari,
         'DBI': dbi,
+        'Purity': purity,
         'Num Clusters': n_clusters,
         'Time (s)': total_time
     }
@@ -113,16 +98,15 @@ def run_optics():
     }
 
     # Parameter Lists
-    metrics = ['euclidean', 'manhattan', 'chebyshev'] # Only need to select 3
-    algorithms = ['ball_tree', 'kd_tree', 'brute'] # Only need to select 2
+    metrics = ['euclidean', 'manhattan', 'chebyshev', 'l1']
+    algorithms = ['ball_tree', 'kd_tree', 'brute']
     
     # Additional Parameters
-    min_samples_list = [3, 5, 10, 20]
-    #eps_list = [0.5, 1.0, 1.5]
+    min_samples_list = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 
     # Prepare All Parameter Combinations
     parameter_combinations = list(product(
-        datasets.keys(), metrics, algorithms, min_samples_list#, cluster_methods, min_samples_list, eps_list
+        datasets.keys(), metrics, algorithms, min_samples_list
     ))
 
     # Load Existing Results
@@ -171,3 +155,29 @@ def optics_sort_csv():
     sort_columns = ['Dataset', 'Metric', 'Algorithm', 'Min Samples']
     df_sorted = df.sort_values(by=sort_columns, ascending=True, ignore_index=True)
     df_sorted.to_csv(optics_csv_file, index=False)
+
+def check_sparse():
+    # Initialize DataLoader and DataProcessor
+    data_loader = DataLoader()
+    data_processor = DataProcessor()
+
+    # Load Datasets
+    df_satimage, labels_satimage = data_loader.load_arff_data('satimage')
+    df_splice, labels_splice = data_loader.load_arff_data('splice')
+    df_vowel, labels_vowel = data_loader.load_arff_data('vowel')
+
+    # Preprocess Datasets
+    df_satimage = data_processor.preprocess_dataset(df_satimage)
+    df_splice   = data_processor.preprocess_dataset(df_splice)
+    df_vowel    = data_processor.preprocess_dataset(df_vowel)
+
+    X = df_satimage.values
+    Y = df_splice.values
+    Z = df_vowel.values
+    from scipy.sparse import csr_matrix
+    X_sparse = csr_matrix(X)
+    Y_sparse = csr_matrix(Y)
+    Z_sparse = csr_matrix(Z)
+    print('satimage is ', type(X_sparse))
+    print('splice is ', type(Y_sparse))
+    print('vowel is ', type(Z_sparse))

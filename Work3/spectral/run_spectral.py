@@ -9,11 +9,12 @@ from functools import partial
 
 from spectral.spectral import spectralAlgorithm
 from preprocessing import DataLoader, DataProcessor
-from utils import save_spectral_results
+from utils import save_spectral_results, purity_score
 
 # Function to Process Each Combination
 def process_combination(params, datasets):
-    dataset_name, eigen_solver, affinity, n_neighbors, assign_labels, n_clusters = params
+    dataset_name, n_neighbors, affinity, eigen_solver, assign_labels, n_clusters, seed = params
+    #print(f"Running combination {dataset_name},{n_neighbors},{affinity},{eigen_solver},{assign_labels},{n_clusters}")
 
     X = datasets[dataset_name]['df']
     y = datasets[dataset_name]['labels']
@@ -22,7 +23,7 @@ def process_combination(params, datasets):
     total_time = None
     try:  
         start = time.time()
-        labels = spectralAlgorithm(X, eigen_solver, affinity, n_neighbors, assign_labels, n_clusters, n_jobs=1)
+        labels = spectralAlgorithm(X, eigen_solver, affinity, n_neighbors, assign_labels, n_clusters, seed, n_jobs=1)
         total_time = time.time() - start
         
     except Exception as e:
@@ -38,29 +39,31 @@ def process_combination(params, datasets):
             silhouette = silhouette_score(X[mask], labels[mask])
             dbi = davies_bouldin_score(X[mask], labels[mask])
         else:
-            silhouette = 'NAN'
-            dbi = 'NAN'
+            silhouette = 'NA'
+            dbi = 'NA'
 
         ari = adjusted_rand_score(y, labels)
+        purity = purity_score(y, labels)
 
     except Exception as e:
-        print(f"Error computing metrics for dataset '{dataset_name}': {e}\n")
-        silhouette = ari = dbi = 'NAN'
+        print(f"Error computing metrics for dataset {dataset_name}: {e}\n")
+        silhouette = ari = dbi = purity = 'NA'
 
     result_entry = {
         'Dataset': dataset_name,
-        'Eigen Solver': eigen_solver,
-        'Affinity': affinity,
-        'Assign Labels': assign_labels,
         'N Neighbors': n_neighbors,
+        'Affinity': affinity,
+        'Eigen Solver': eigen_solver,
+        'Assign Labels': assign_labels,
         'N Clusters': n_clusters,
-        'Silhouette': silhouette,
-        'Silhouette': silhouette,
+        'Seed': seed,
         'ARI': ari,
         'DBI': dbi,
+        'Silhouette': silhouette,
+        'Purity': purity,
         'Time (s)': total_time
     }
-
+    #print(f"Finished combination {dataset_name},{n_neighbors},{affinity},{eigen_solver},{assign_labels},{n_clusters}")
     return result_entry
 
 def run_spectral():
@@ -82,10 +85,10 @@ def run_spectral():
     datasets = {
         'satimage': {
             'df': df_satimage,
-           'labels': labels_satimage
+            'labels': labels_satimage
         },
         'splice': {
-           'df': df_splice,
+            'df': df_splice,
             'labels': labels_splice
         },
         'vowel': {
@@ -98,19 +101,20 @@ def run_spectral():
     eigen_solvers = ['arpack', 'lobpcg', 'amg'] # Only these three exist
     affinities = ['nearest_neighbors', 'rbf'] # Only can use these two
     assign_labels_list = ['kmeans', 'cluster_qr'] # Only these two are asked
-    n_neighbors_list = [3, 5, 10, 15, 20, 25] # Ignored for 'rbf'. ToDo: How many values?
+    n_neighbors_list = [3, 5, 10, 15, 20, 30, 50] # Ignored for 'rbf'. ToDo: How many values?
     
     # Additional Parameters
-    n_clusters_list = [3, 5, 8, 13] #list(range(2, 16))
+    n_clusters_list = list(range(2, 16))
+    seeds = [0, 1, 2, 3, 4]
 
     # Prepare All Parameter Combinations
     parameter_combinations = []
-    for dataset, eigen_solver, affinity, assign_labels, n_clusters in product(datasets.keys(), eigen_solvers, affinities, assign_labels_list, n_clusters_list):
+    for dataset, affinity, eigen_solver, assign_labels, n_clusters, seed in product(datasets.keys(), affinities, eigen_solvers, assign_labels_list, n_clusters_list, seeds):
         if affinity == 'rbf':
-            parameter_combinations.append((dataset, eigen_solver, affinity, 1, assign_labels, n_clusters))
+            parameter_combinations.append((dataset, 1, affinity, eigen_solver, assign_labels, n_clusters, seed))
         else:
             for n_neighbors in n_neighbors_list:
-                parameter_combinations.append((dataset, eigen_solver, affinity, n_neighbors, assign_labels, n_clusters))
+                parameter_combinations.append((dataset, n_neighbors, affinity, eigen_solver, assign_labels, n_clusters, seed))
 
     # Load Existing Results
     try:
@@ -118,12 +122,13 @@ def run_spectral():
         spectral_df = pd.read_csv(spectral_csv_file)
     except FileNotFoundError:
         spectral_df = pd.DataFrame()
+        print(f"{spectral_csv_file} was not found.")
 
     # Build Set of Existing Combinations
     if not spectral_df.empty:
         existing_combinations = set(zip(
-        spectral_df['Dataset'], spectral_df['Eigen Solver'], spectral_df['Affinity'], spectral_df['Assign Labels'],
-        spectral_df['N Neighbors'], spectral_df['N Clusters']
+        spectral_df['Dataset'], spectral_df['N Neighbors'], spectral_df['Affinity'], spectral_df['Eigen Solver'],
+        spectral_df['Assign Labels'], spectral_df['N Clusters'], spectral_df['Seed']
         ))
     else:
         existing_combinations = set()
@@ -156,6 +161,35 @@ def run_spectral():
 def spectral_sort_csv():
     spectral_csv_file = 'results/spectral_results.csv'
     df = pd.read_csv(spectral_csv_file)
-    sort_columns = ['Dataset', 'Eigen Solver', 'Affinity', 'Assign Labels', 'N Neighbors', 'N Clusters']
+    sort_columns = ['Dataset', 'N Neighbors', 'Affinity', 'Eigen Solver', 'Assign Labels', 'N Clusters', 'Seed']
     df_sorted = df.sort_values(by=sort_columns, ascending=True, ignore_index=True)
     df_sorted.to_csv(spectral_csv_file, index=False)
+
+def spectral_sort_and_remove_duplicates_csv():
+    """
+    Reads the spectral_results.csv file, sorts it based on specified columns,
+    removes duplicate rows (keeping the first occurrence), and writes the
+    cleaned DataFrame back to the CSV.
+    """
+    # Path to the CSV file
+    spectral_csv_file = 'results/spectral_results.csv'
+    
+    # Read the CSV into a DataFrame
+    df = pd.read_csv(spectral_csv_file)
+    
+    # Define the columns to sort by
+    sort_columns = ['Dataset', 'N Neighbors', 'Affinity', 'Eigen Solver', 'Assign Labels', 'N Clusters', 'Seed']
+    
+    # Sort the DataFrame by the specified columns
+    df_sorted = df.sort_values(by=sort_columns, ascending=True, ignore_index=True)
+    
+    # Remove duplicate rows based on all sort_columns
+    # This ensures that rows with identical values in sort_columns are considered duplicates
+    df_unique = df_sorted.drop_duplicates(subset=sort_columns, keep='first')
+    
+    # Optional: If you want to consider all columns for identifying duplicates,
+    # simply use drop_duplicates without the subset parameter
+    # df_unique = df_sorted.drop_duplicates(keep='first')
+    
+    # Write the cleaned DataFrame back to the CSV, overwriting the original file
+    df_unique.to_csv(spectral_csv_file, index=False)

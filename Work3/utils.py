@@ -1,4 +1,24 @@
 import csv
+import numpy as np
+from sklearn.metrics import cluster
+
+def purity_score(y_true, y_pred):
+    """
+    Calculate the purity score for the given clustering.
+
+    Args:
+        y_true (array-like): Ground truth class labels.
+        y_pred (array-like): Cluster labels assigned by the clustering algorithm.
+    Returns:
+        purity (float): Purity score ranging from 0 to 1.
+    """
+    # Compute confusion matrix (contingency matrix)
+    contingency_matrix = cluster.contingency_matrix(y_true, y_pred)
+    
+    # Sum the maximum counts for each cluster
+    max_counts = np.amax(contingency_matrix, axis=0)
+    return np.sum(max_counts) / np.sum(contingency_matrix) 
+
 
 def save_optics_results(data_row, csv_file):
     """
@@ -17,6 +37,7 @@ def save_optics_results(data_row, csv_file):
         'Silhouette',
         'ARI',
         'DBI',
+        'Purity',
         'Num Clusters',
         'Time (s)'
     ]
@@ -42,14 +63,16 @@ def save_spectral_results(data_row, csv_file):
     # Only include specified parameters and results in the CSV columns
     csv_columns = [
         'Dataset',
-        'Eigen Solver',
-        'Affinity',
-        'Assign Labels',
         'N Neighbors',
+        'Affinity',
+        'Eigen Solver',
+        'Assign Labels',
         'N Clusters',
-        'Silhouette',
+        'Seed',
         'ARI',
         'DBI',
+        'Silhouette',
+        'Purity',
         'Time (s)'
     ]
 
