@@ -41,8 +41,7 @@ def process_combination(params, datasets):
             silhouette = silhouette_score(X[mask], labels[mask])
             dbi = davies_bouldin_score(X[mask], labels[mask])
         else:
-            silhouette = 'NA'
-            dbi = 'NA'
+            silhouette = dbi = 'NA'
 
         ari = adjusted_rand_score(y, labels)
         purity = purity_score(y, labels)
@@ -102,7 +101,7 @@ def run_optics():
     algorithms = ['ball_tree', 'kd_tree', 'brute']
     
     # Additional Parameters
-    min_samples_list = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    min_samples_list = list(range(2, 16))
 
     # Prepare All Parameter Combinations
     parameter_combinations = list(product(
@@ -115,6 +114,7 @@ def run_optics():
         optics_df = pd.read_csv(optics_csv_file)
     except FileNotFoundError:
         optics_df = pd.DataFrame()
+        print(f"{optics_csv_file} was not found.")
 
     # Build Set of Existing Combinations
     if not optics_df.empty:
@@ -155,29 +155,3 @@ def optics_sort_csv():
     sort_columns = ['Dataset', 'Metric', 'Algorithm', 'Min Samples']
     df_sorted = df.sort_values(by=sort_columns, ascending=True, ignore_index=True)
     df_sorted.to_csv(optics_csv_file, index=False)
-
-def check_sparse():
-    # Initialize DataLoader and DataProcessor
-    data_loader = DataLoader()
-    data_processor = DataProcessor()
-
-    # Load Datasets
-    df_satimage, labels_satimage = data_loader.load_arff_data('satimage')
-    df_splice, labels_splice = data_loader.load_arff_data('splice')
-    df_vowel, labels_vowel = data_loader.load_arff_data('vowel')
-
-    # Preprocess Datasets
-    df_satimage = data_processor.preprocess_dataset(df_satimage)
-    df_splice   = data_processor.preprocess_dataset(df_splice)
-    df_vowel    = data_processor.preprocess_dataset(df_vowel)
-
-    X = df_satimage.values
-    Y = df_splice.values
-    Z = df_vowel.values
-    from scipy.sparse import csr_matrix
-    X_sparse = csr_matrix(X)
-    Y_sparse = csr_matrix(Y)
-    Z_sparse = csr_matrix(Z)
-    print('satimage is ', type(X_sparse))
-    print('splice is ', type(Y_sparse))
-    print('vowel is ', type(Z_sparse))
