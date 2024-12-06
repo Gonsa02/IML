@@ -1,0 +1,18 @@
+satimage:
+  Adjusted Rand Index: {'best_k_max': np.int64(8), 'best_k': np.int64(8), 'best_seed': np.int64(1), 'ARI Score': np.float64(0.5574881057363904)}
+  Davies-Bouldin Index: {'best_k_max': np.int64(4), 'best_k': np.int64(4), 'best_seed': np.int64(1), 'DBI Score': np.float64(1.1757865163280907)}
+  Silhouette Score: {'best_k_max': np.int64(4), 'best_k': np.int64(4), 'best_seed': np.int64(2), 'Silhouette Score': np.float64(0.3934057752089315)}
+  Purity Score: {'best_k_max': np.int64(4), 'best_k': np.int64(4), 'best_seed': np.int64(2), 'Purity Score': np.float64(0.8253302253302254)}
+
+splice:
+  Adjusted Rand Index: {'best_k_max': np.int64(4), 'best_k': np.int64(4), 'best_seed': np.int64(2), 'ARI Score': np.float64(0.3084246250505711)}
+  Davies-Bouldin Index: {'best_k_max': np.int64(4), 'best_k': np.int64(4), 'best_seed': np.int64(4), 'DBI Score': np.float64(7.324071604397371)}
+  Silhouette Score: {'best_k_max': np.int64(4), 'best_k': np.int64(4), 'best_seed': np.int64(0), 'Silhouette Score': np.float64(0.01178728414568)}
+  Purity Score: {'best_k_max': np.int64(4), 'best_k': np.int64(4), 'best_seed': np.int64(2), 'Purity Score': np.float64(0.635395874916833)}
+
+vowel:
+  Adjusted Rand Index: {'best_k_max': np.int64(8), 'best_k': np.int64(8), 'best_seed': np.int64(4), 'ARI Score': np.float64(0.1737534203005219)}
+  Davies-Bouldin Index: {'best_k_max': np.int64(1024), 'best_k': np.int64(586), 'best_seed': np.int64(4), 'DBI Score': np.float64(0.4195209521870031)}
+  Silhouette Score: {'best_k_max': np.int64(256), 'best_k': np.int64(256), 'best_seed': np.int64(4), 'Silhouette Score': np.float64(0.4062794310839297)}
+  Purity Score: {'best_k_max': np.int64(4), 'best_k': np.int64(4), 'best_seed': np.int64(3), 'Purity Score': np.float64(0.5858585858585859)}
+

@@ -1,9 +1,10 @@
 import numpy as np
+from collections import Counter
 
 from kmeans.kmeans import KMeans
 
 class XMeans:
-    def __init__(self, k_max, max_iters, seed=0, verbose=False):
+    def __init__(self, k_max, max_iters=30, seed=0, verbose=False):
         self.k_max = k_max
         self.max_iters = max_iters
         self.seed = seed
@@ -67,54 +68,53 @@ class XMeans:
     
     def fit_predict(self, X):
         np.random.seed(self.seed)
-
         X = np.array(X)
 
         self._centroids = [np.mean(X, axis=0)]
         labels = np.zeros(X.shape[0], dtype=int)
+        current_k = 1
+        continue_dividing = True
 
-        k_current = 1
-        
-        still_dividing = True
-
-        while still_dividing and k_current < self.k_max:
-            division_ocurred = False
+        while continue_dividing and current_k < self.k_max:
             new_centroids = []
+            clusters_split = 0
 
-            for cluster_id in range(k_current):
+            for cluster_id in range(current_k):
+
                 #Take only subset of points belonging to that cluster
                 cluster_points = X[labels == cluster_id]
 
                 if len(cluster_points) == 1:
                     new_centroids.append(self._centroids[cluster_id])
-                elif len(cluster_points) > 1:
-
+                elif len(cluster_points) > 1 and current_k + clusters_split < self.k_max:
                     child_centroids = self._split_centroid(self._centroids[cluster_id], cluster_points)
 
                     kmeans = KMeans(k=2, max_iters=self.max_iters, seed=self.seed, verbose=self.verbose)
                     child_labels = kmeans.fit_predict(cluster_points, initial_centroids=child_centroids)
-                    centroids = kmeans.get_centroids()
+                    child_centroids = kmeans.get_centroids()
 
-                    bic_no_division = self._compute_bic([cluster_points], [self._centroids[cluster_id]])
-                    bic_division = self._compute_bic(
+                    bic_no_split = self._compute_bic([cluster_points], [self._centroids[cluster_id]])
+                    bic_split = self._compute_bic(
                         [cluster_points[child_labels == 0], cluster_points[child_labels == 1]],
-                        centroids
+                        child_centroids
                     )
-                
-                    if bic_division > bic_no_division:
-                        division_ocurred = True
-                        new_centroids.extend(centroids)
+
+                    if bic_split > bic_no_split:
+                        clusters_split += 1
+                        new_centroids.extend(child_centroids)
                     else:
                         new_centroids.append(self._centroids[cluster_id])
+                elif current_k + clusters_split == self.k_max:
+                    new_centroids.append(self._centroids[cluster_id])
 
-            if not division_ocurred:
-                still_dividing = False
-            
+            if clusters_split == 0:
+                continue_dividing = False
+
             self._centroids = np.array(new_centroids)
-            k_current = len(self._centroids)
+            current_k = len(self._centroids)
             labels = self._assign_labels(X)
 
-        self._best_k = k_current
+        self._best_k = current_k
         return labels
     
     def predict(self, X):
@@ -123,3 +123,27 @@ class XMeans:
 
     def get_best_k(self):
         return self._best_k
+    
+    @staticmethod
+    def compute_accuracy(predicted_labels, true_labels):
+        predicted_labels = np.array(predicted_labels)
+        true_labels = np.array(true_labels)
+
+        label_mapping = {}
+        clusters = np.unique(predicted_labels)
+
+        for c in clusters:
+            samples_idxs = np.where(predicted_labels == c)
+
+            true_labels_cluster = true_labels[samples_idxs]
+            if len(true_labels_cluster) > 0:
+                label_mapping[c] = Counter(
+                    true_labels_cluster).most_common(1)[0][0]
+            else:
+                label_mapping[c] = -1
+
+        matched_predicted_labels = np.array(
+            [label_mapping[c] for c in predicted_labels])
+
+        accuracy = np.mean(matched_predicted_labels == true_labels)
+        return accuracy

@@ -30,7 +30,38 @@ def save_kmeans_results(data_row, csv_file):
             writer.writerow(data_row)
     except IOError:
         print("I/O error when writing KMeans results.")
+    
 
+def save_xmeans_results(data_row, csv_file):
+    """
+    Saves per-run results to a CSV file.
+
+    Args:
+        data_row (dict): Data to write to the CSV.
+        csv_file (str): Filename of the CSV file.
+    """
+    # Only include specified parameters and results in the CSV columns
+    csv_columns = [
+        'Dataset',
+        'k_max',
+        'best_k',
+        'Seed',
+        'ARI',
+        'Silhouette',
+        'Purity',
+        'DBI',
+        'Time (s)'
+    ]
+
+    try:
+        with open(csv_file, 'a', newline='') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+            # Write header if file is empty
+            if csvfile.tell() == 0:
+                writer.writeheader()
+            writer.writerow(data_row)
+    except IOError:
+        print("I/O error when writing KMeans results.")
 
 def save_optics_results(data_row, csv_file):
     """
