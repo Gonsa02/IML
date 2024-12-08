@@ -1,6 +1,6 @@
 # Clustering Experiment Runner
 
-This script allows you to run various clustering experiments using algorithms such as OPTICS, Spectral Clustering, K-Means, X-Means, and Fuzzy Clustering.
+This script allows you to run various clustering experiments using algorithms such as OPTICS, Spectral Clustering, K-Means, X-Means, and Fuzzy Clustering. Additionally, you can generate visual plots of the results for each algorithm.
 
 ## Requirements
 
@@ -32,11 +32,11 @@ pip install -r requirements.txt
 
 ## Usage
 
-You can run the script from the command line, specifying the type of clustering experiment you wish to conduct.
+You can run the script from the command line to either execute clustering experiments or generate plots of the experiment results.
 
 ## Running Experiments
 
-The main command structure is as follows:
+To run a specific clustering experiment, use the `--experiment` option followed by the experiment type.
 
 ```bash
 python main.py --experiment <experiment_type>
@@ -49,6 +49,7 @@ python main.py --experiment <experiment_type>
 - **kmeans:** Run a K-Means clustering experiment.
 - **xmeans:** Run an X-Means clustering experiment.
 - **fuzzy:** Run a Fuzzy Clustering experiment.
+- **all:** Run all previous clustering experiments.
 
 ### Example Commands
 
@@ -60,10 +61,27 @@ To run an OPTICS experiment:
 python main.py --experiment optics
 ```
 
+## Generating Plots
+
+To generate visual plots for a specific algorithm's experiment results, use the `--generate_plots` option followed by the algorithm name.
+
+```bash
+python main.py --generate_plots <algorithm>
+```
+
+### Example Commands
+
+#### Generate Plots for K-Means
+
+```bash
+python main.py --generate_plots kmeans
+```
+
 ### Notes
 
 - Specify the experiment type using the `--experiment` option.
-- Ensure that only one experiment type is specified at a time.
+- Specify the algorithm for plot generation using the `--generate_plots` option.
+- Ensure that only valid experiment and algorithm types are specified.
 
 ## Getting Help
 
