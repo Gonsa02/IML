@@ -61,7 +61,7 @@ def run_experiment(args):
         return {"k": k, "distance": dist, "Error": str(e)}
 
 
-def run_kmeans():
+def run_gkmeans():
     datasets = ["vowel", "splice", "satimage"]
     k_values = range(2, 16)
     distance_metrics = ['euclidean', 'manhattan', 'cosine']
@@ -153,4 +153,4 @@ def create_combined_csv(datasets, combined_file):
 
 
 if __name__ == "__main__":
-    run_kmeans()
+    run_gkmeans()
