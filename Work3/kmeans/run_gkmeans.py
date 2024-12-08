@@ -9,7 +9,7 @@ from itertools import product
 import time
 from concurrent.futures import ProcessPoolExecutor, as_completed, ThreadPoolExecutor
 from preprocessing import DataLoader, DataProcessor
-from .kmeans import KMeans
+from .global_kmeans import fast_global_k_means
 
 
 # Define evaluation metrics
@@ -27,7 +27,7 @@ def purity_score(y_true, y_pred):
 
 def run_experiment(args):
     dataset_name, parameters = args
-    k, dist, seed = parameters
+    k, dist = parameters
 
     try:
         # Initialize loaders and preprocessors
@@ -40,12 +40,12 @@ def run_experiment(args):
         y_true = labels
 
         start_time = time.time()
-        km = KMeans(k=k, distance=dist, seed=seed)
+        km = fast_global_k_means(k=k, distance=dist)
         y_pred = km.fit_predict(X)
         elapsed_time = time.time() - start_time
 
         scores = {
-            "k": k, "distance": dist, "seed": seed,
+            "k": k, "distance": dist,
             "Adjusted Rand Index": adjusted_rand_score(y_true, y_pred),
             "Davies-Bouldin Index": davies_bouldin_score(X, y_pred),
             "Silhouette Score": silhouette_score(X, y_pred),
@@ -58,17 +58,16 @@ def run_experiment(args):
 
     except Exception as e:
         # Return the exception with parameters for easier debugging
-        return {"k": k, "distance": dist, "seed": seed, "Error": str(e)}
+        return {"k": k, "distance": dist, "Error": str(e)}
 
 
 def run_kmeans():
     datasets = ["vowel", "splice", "satimage"]
     k_values = range(2, 16)
-    seeds = [0, 1, 2, 3, 4]
     distance_metrics = ['euclidean', 'manhattan', 'cosine']
 
     # Prepare parameter combinations
-    parameter_combinations = list(product(k_values, distance_metrics, seeds))
+    parameter_combinations = list(product(k_values, distance_metrics))
     print(f"Total parameter combinations: {len(parameter_combinations)}")
 
     # Create results directory
@@ -76,7 +75,7 @@ def run_kmeans():
 
     for dataset_name in datasets:
         print(f"\nRunning experiments for {dataset_name} dataset...")
-        results_file = f"results/KMEANS_{dataset_name}_results.csv"
+        results_file = f"results/GLOBAL_KMEANS_{dataset_name}_results.csv"
 
         # Check if the results file exists to determine if we need to write headers
         file_exists = os.path.isfile(results_file)
@@ -92,7 +91,7 @@ def run_kmeans():
 
             # Open the CSV file in append mode
             with open(results_file, 'a', newline='') as csvfile:
-                fieldnames = ["k", "distance", "seed", "Adjusted Rand Index", "Davies-Bouldin Index",
+                fieldnames = ["k", "distance", "Adjusted Rand Index", "Davies-Bouldin Index",
                               "Silhouette Score", "Purity Score", "Time (s)", "Iterations", "Error"]
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
@@ -107,7 +106,7 @@ def run_kmeans():
                     except Exception as e:
                         print(f"Experiment failed: {e}")
 
-    create_combined_csv(datasets, "results/kmeans_results.csv")
+    create_combined_csv(datasets, "results/globalkmeans_results.csv")
 
 
 def create_combined_csv(datasets, combined_file):
@@ -115,7 +114,8 @@ def create_combined_csv(datasets, combined_file):
         df_list = []
 
         for dataset_name in datasets:
-            individual_file = f"results/KMEANS_{dataset_name}_results.csv"
+            individual_file = f"""results/GLOBAL_KMEANS_{
+                dataset_name}_results.csv"""
             if os.path.isfile(individual_file):
                 df = pd.read_csv(individual_file)
                 df['dataset'] = dataset_name
@@ -140,10 +140,10 @@ def create_combined_csv(datasets, combined_file):
 
             # **Delete Original CSVs After Combining**
             for dataset_name in datasets:
-                individual_file = f"""results/KMEANS_{
+                individual_file = f"""results/GLOBAL_KMEANS_{
                     dataset_name}_results.csv"""
                 if os.path.isfile(individual_file):
-                    os.remove(individual_file)
+                    # os.remove(individual_file)
                     print(f"Deleted original file: {individual_file}")
         else:
             print("No individual CSV files found to combine.")

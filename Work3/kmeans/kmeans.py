@@ -1,5 +1,7 @@
 import numpy as np
 from collections import Counter
+from sklearn.metrics import confusion_matrix
+from scipy.optimize import linear_sum_assignment
 
 
 class Distances:
@@ -24,7 +26,7 @@ class Distances:
 
 class KMeans:
 
-    def __init__(self, k=2, max_iters=30, distance='euclidean', seed=0, verbose=False):
+    def __init__(self, k=2, max_iters=100, distance='euclidean', seed=0, verbose=False):
         self.k = k
         self.max_iters = max_iters
         self.distance = KMeans._get_distance(distance)
@@ -32,7 +34,7 @@ class KMeans:
         self.verbose = verbose
 
         self.centroids = None
-        self.iterations = None
+        self.n_iter_ = None
 
     @staticmethod
     def _get_distance(distance):
@@ -51,7 +53,6 @@ class KMeans:
                              for centroid in self.centroids])
         return np.argmin(distances, axis=0)
 
-    # change tolerance
     def _check_convergence(self, new_centroids):
         return np.allclose(self.centroids, new_centroids, atol=1e-5)
 
@@ -87,14 +88,14 @@ class KMeans:
             # Update centroids based on current assignments
             new_centroids = self._update_centroids(X, labels)
             if self._check_convergence(new_centroids):
-                self.iterations = i
+                self.n_iter_ = i
                 if (self.verbose):
                     print(f"Converged at iteration {i+1}")
                 break
 
             self.centroids = new_centroids
             if (i == self.max_iters-1):
-                self.iterations = self.max_iters
+                self.n_iter_ = self.max_iters
                 if (self.verbose):
                     print(f"No convergence")
 
@@ -115,31 +116,7 @@ class KMeans:
         return self.centroids
 
     def get_iterations(self):
-        if self.iterations is None:
+        if self.n_iter_ is None:
             raise Exception("Model has not been fitted yet.")
 
-        return self.iterations
-
-    @staticmethod
-    def compute_accuracy(predicted_labels, true_labels):
-        predicted_labels = np.array(predicted_labels)
-        true_labels = np.array(true_labels)
-
-        label_mapping = {}
-        clusters = np.unique(predicted_labels)
-
-        for c in clusters:
-            samples_idxs = np.where(predicted_labels == c)
-
-            true_labels_cluster = true_labels[samples_idxs]
-            if len(true_labels_cluster) > 0:
-                label_mapping[c] = Counter(
-                    true_labels_cluster).most_common(1)[0][0]
-            else:
-                label_mapping[c] = -1
-
-        matched_predicted_labels = np.array(
-            [label_mapping[c] for c in predicted_labels])
-
-        accuracy = np.mean(matched_predicted_labels == true_labels)
-        return accuracy
+        return self.n_iter_
