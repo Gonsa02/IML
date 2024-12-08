@@ -1,5 +1,3 @@
-# generate_plots.py
-
 from tqdm import tqdm
 import os
 import pandas as pd

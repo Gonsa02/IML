@@ -1,5 +1,3 @@
-# main.py
-
 import argparse
 import sys
 import os
@@ -13,7 +11,6 @@ from spectral.run_spectral import run_spectral
 from kmeans.run_kmeans import run_kmeans
 from kmeans.run_gkmeans import run_gkmeans
 from kmeans.run_xmeans import run_xmeans
-from kmeans.run_gkmeans import run_gkmeans
 from fuzzy.run_fuzzy import run_fuzzy
 
 def ensure_directories():
@@ -106,20 +103,24 @@ def main():
 
     # Handle experiment execution
     if args.experiment:
-        print(f"Running {args.experiment} experiment...")
-        if args.experiment == 'optics':
-            run_optics()
-        elif args.experiment == 'spectral':
-            run_spectral()
-        elif args.experiment == 'kmeans':
-            run_kmeans()
-        elif args.experiment == 'gkmeans':
-            run_gkmeans()
-        elif args.experiment == 'xmeans':
-            run_xmeans()
-        elif args.experiment == 'fuzzy':
-            run_fuzzy()
-        print(f"{args.experiment} experiment completed.\n")
+        if 'all' in args.experiment:
+            run_all_experiments()
+        else:
+            for experiment in args.experiment:
+                print(f"Running {experiment} experiment...")
+                if experiment == 'optics':
+                    run_optics()
+                elif experiment == 'spectral':
+                    run_spectral()
+                elif experiment == 'kmeans':
+                    run_kmeans()
+                elif experiment == 'gkmeans':
+                    run_gkmeans()
+                elif experiment == 'xmeans':
+                    run_xmeans()
+                elif experiment == 'fuzzy':
+                    run_fuzzy()
+                print(f"{experiment} experiment completed.\n")
 
     # Handle plot generation
     if args.generate_plots:
@@ -127,13 +128,13 @@ def main():
         if 'all' in plots:
             run_all_plots()
         else:
-            for algo in plots:
-                print(f"Generating plots for {algo}...")
+            for algorithm in plots:
+                print(f"Generating plots for {algorithm}...")
                 try:
-                    generate_plots(algo)
-                    print(f"Plots for {algo} generated successfully.\n")
+                    generate_plots(algorithm)
+                    print(f"Plots for {algorithm} generated successfully.\n")
                 except Exception as e:
-                    print(f"Error generating plots for {algo}: {e}\n")
+                    print(f"Error generating plots for {algorithm}: {e}\n")
 
 
 if __name__ == '__main__':

@@ -39,14 +39,15 @@ You can run the script from the command line to either execute clustering experi
 To run a specific clustering experiment, use the `--experiment` option followed by the experiment type.
 
 ```bash
-python main.py --experiment <experiment_type>
+python main.py --experiment <algorithm>
 ```
 
-### Experiment Types
+### Algorithms
 
 - **optics:** Run an OPTICS clustering experiment.
 - **spectral:** Run a Spectral Clustering experiment.
 - **kmeans:** Run a K-Means clustering experiment.
+- **globalkmeans**: Run a Global K-Means clustering experiment.
 - **xmeans:** Run an X-Means clustering experiment.
 - **fuzzy:** Run a Fuzzy Clustering experiment.
 - **all:** Run all previous clustering experiments.
@@ -68,6 +69,16 @@ To generate visual plots for a specific algorithm's experiment results, use the 
 ```bash
 python main.py --generate_plots <algorithm>
 ```
+
+### Algorithms
+
+- **optics:** Run an OPTICS clustering experiment.
+- **spectral:** Run a Spectral Clustering experiment.
+- **kmeans:** Run a K-Means clustering experiment.
+- **globalkmeans**: Run a Global K-Means clustering experiment.
+- **xmeans:** Run an X-Means clustering experiment.
+- **fuzzy:** Run a Fuzzy Clustering experiment.
+- **all:** Run all previous clustering experiments.
 
 ### Example Commands
 
