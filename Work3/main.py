@@ -4,7 +4,7 @@ from optics.run_optics import run_optics
 from spectral.run_spectral import run_spectral
 from kmeans.run_kmeans import run_kmeans
 from kmeans.run_xmeans import run_xmeans
-#from fuzzy.run_fuzzy import run_fuzzy
+from fuzzy.run_fuzzy import run_fuzzy
 
 def main():
     parser = argparse.ArgumentParser(description='Run clustering experiments')
@@ -29,8 +29,8 @@ def main():
         run_kmeans()
     elif args.experiment == 'xmeans':
         run_xmeans()
-    #elif args.experiment == 'fuzzy':
-    #    run_fuzzy()
+    elif args.experiment == 'fuzzy':
+       run_fuzzy()
 
 if __name__ == '__main__':
     main()
