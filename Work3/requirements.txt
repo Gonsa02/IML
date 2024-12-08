@@ -1,6 +1,6 @@
 pandas
 numpy
 scikit-learn
-umap-learn
 tqdm
 scipy
+pyamg

@@ -1,14 +1,80 @@
-import argparse
+# main.py
 
+import argparse
+import sys
+import os
+
+# Import the generate_plots function
+from plots.generate_plots import generate_plots
+
+# Import run functions for each algorithm
 from optics.run_optics import run_optics
 from spectral.run_spectral import run_spectral
 from kmeans.run_kmeans import run_kmeans
 from kmeans.run_gkmeans import run_gkmeans
 from kmeans.run_xmeans import run_xmeans
+from kmeans.run_gkmeans import run_gkmeans
 from fuzzy.run_fuzzy import run_fuzzy
 
-# Import the generate_plots function
-from plots import generate_plots
+def ensure_directories():
+    """
+    Ensures that the necessary directories for results and plots exist.
+    """
+    os.makedirs("results", exist_ok=True)
+    os.makedirs("plots/plots_pca", exist_ok=True)
+    os.makedirs("plots/plots_cm", exist_ok=True)
+
+def run_all_experiments():
+    """
+    Runs all clustering experiments.
+    """
+    print("Running all experiments...")
+    try:
+        run_optics()
+        print("Optics experiment completed.\n")
+    except Exception as e:
+        print(f"Error running Optics experiment: {e}\n")
+    
+    try:
+        run_spectral()
+        print("Spectral experiment completed.\n")
+    except Exception as e:
+        print(f"Error running Spectral experiment: {e}\n")
+    
+    try:
+        run_kmeans()
+        print("KMeans experiment completed.\n")
+    except Exception as e:
+        print(f"Error running KMeans experiment: {e}\n")
+    
+    try:
+        run_xmeans()
+        print("XMeans experiment completed.\n")
+    except Exception as e:
+        print(f"Error running XMeans experiment: {e}\n")
+    
+    try:
+        run_fuzzy()
+        print("Fuzzy experiment completed.\n")
+    except Exception as e:
+        print(f"Error running Fuzzy experiment: {e}\n")
+    
+    print("All experiments have been executed.\n")
+
+def run_all_plots():
+    """
+    Generates plots for all clustering algorithms.
+    """
+    print("Generating plots for all algorithms...")
+    algorithms = ['optics', 'spectral', 'kmeans', 'xmeans', 'fuzzy']
+    for algo in algorithms:
+        print(f"Generating plots for {algo}...")
+        try:
+            generate_plots(algo)
+            print(f"Plots for {algo} generated successfully.\n")
+        except Exception as e:
+            print(f"Error generating plots for {algo}: {e}\n")
+    print("All plots have been generated.\n")
 
 
 def main():
@@ -17,16 +83,18 @@ def main():
 
     # Experiment option
     parser.add_argument(
-        '--experiment',
-        choices=['optics', 'spectral', 'kmeans', 'xmeans', 'fuzzy'],
-        help='Type of experiment to run: optics, spectral, kmeans, xmeans, fuzzy'
+        '--experiment', 
+        nargs='+',
+        choices=['all', 'optics', 'spectral', 'kmeans', 'xmeans', 'globalkmeans', 'fuzzy'],
+        help="Type of experiment to run: 'optics', 'spectral', 'kmeans', 'xmeans', 'globalkmeans', 'fuzzy', or 'all'"
     )
 
     # Generate plots option
     parser.add_argument(
         '--generate_plots',
-        choices=['optics', 'spectral', 'kmeans', 'xmeans', 'fuzzy'],
-        help='Generate plots for the specified algorithm'
+        nargs='+',  # Allow multiple plot generations
+        choices=['all', 'optics', 'spectral', 'kmeans', 'xmeans', 'globalkmeans', 'fuzzy'],
+        help="Generate plots for the specified algorithm(s): 'optics', 'spectral', 'kmeans', 'xmeans', 'globalkmeans' 'fuzzy', or 'all'"
     )
 
     args = parser.parse_args()
@@ -55,9 +123,17 @@ def main():
 
     # Handle plot generation
     if args.generate_plots:
-        print(f"Generating plots for {args.generate_plots}...")
-        generate_plots(args.generate_plots)
-        print(f"Plots for {args.generate_plots} generated successfully.\n")
+        plots = args.generate_plots
+        if 'all' in plots:
+            run_all_plots()
+        else:
+            for algo in plots:
+                print(f"Generating plots for {algo}...")
+                try:
+                    generate_plots(algo)
+                    print(f"Plots for {algo} generated successfully.\n")
+                except Exception as e:
+                    print(f"Error generating plots for {algo}: {e}\n")
 
 
 if __name__ == '__main__':
