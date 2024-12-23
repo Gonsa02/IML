@@ -96,7 +96,7 @@ class imlPCA:
         Plots the 2D or 3D data from the projected subspace.
         """
         num_components = X_projected.shape[1]
-        plt.figure(figsize=(6, 5))
+        plt.figure(figsize=(8, 6))
         
         if num_components == 2:
             if labels is not None and len(labels) == len(X_projected):
@@ -142,6 +142,26 @@ class imlPCA:
         Reconstructs the data from the projected subspace back to original dimension.
         """
         return X_projected @ W.T + mean_vec
+    
+
+    def fit_transform(self, X):
+        """
+        Fit the model with X and apply the dimensionality reduction on X.
+        """
+        # Step 3: Compute mean vector
+        mean_vec = self.compute_mean_vector(X)
+
+        # Step 4: Compute covariance matrix
+        cov_matrix = self.compute_covariance_matrix(X, mean_vec)
+
+        # Step 5: Eigen decomposition
+        eigenvalues, eigenvectors = self.eigen_decomposition(cov_matrix)
+
+        # Step 6: Sort eigenvectors
+        k = 2
+        _, sorted_eigenvectors = self.sort_eigens(eigenvalues, eigenvectors, k)
+
+        return self.project_data(X, mean_vec, sorted_eigenvectors)
 
 
 def main():
