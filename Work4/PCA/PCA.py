@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from sklearn.feature_selection import mutual_info_classif
 import pandas as pd
 import seaborn as sns
+from sklearn.metrics import mean_squared_error
 
 from preprocessing.data_loader import DataLoader
 from preprocessing.data_processor import DataProcessor
@@ -181,12 +182,21 @@ class imlPCA:
         """
         Plots the 2D data from the projected subspace.
         """
+        # Create a mirrored version of Custom PCA results by flipping the first principal component
+        mirrored_X_projected = X_projected.copy()
+        if dataset_name == "Satimage":
+            mirrored_X_projected.loc[:, 0] *= -1  # Flip the x-axis for mirroring
+        elif dataset_name == "Splice":
+            mirrored_X_projected.loc[:, 1] *= -1  # Flip the y-axis for mirroring
+        else:
+            raise ValueError(f"Dataset name must be 'Satimage' or 'Splice', right now it's {dataset_name}.")
+
         if num_components == 2:
             plt.figure(figsize=(10, 8))
             sns.scatterplot(
-                data=X_projected,
-                x=X_projected.columns[0],
-                y=X_projected.columns[1],
+                data=mirrored_X_projected,
+                x=mirrored_X_projected.columns[0],
+                y=mirrored_X_projected.columns[1],
                 hue=labels,
                 palette='tab10',
                 s=60,
@@ -298,9 +308,19 @@ class imlPCA:
     def fit_transform(self, X, cumulative_threshold=0.85):
         """
         Fit the model with X and apply the dimensionality reduction on X.
+
+        Parameters:
+            - X (pd.DataFrame): The input data to fit and transform.
+            - cumulative_threshold (float): The threshold for cumulative explained variance to determine the number of components.
+
+        Returns:
+            - X_projected (np.ndarray): The transformed data in the PCA subspace.
         """
+        if not isinstance(X, pd.DataFrame):
+            raise TypeError(f"Expected input X to be a pandas DataFrame, but got {type(X).__name__} instead.")
+
         # Step 3: Compute mean vector
-        mean_vec = self._compute_mean_vector(X)
+        mean_vec = self._compute_mean_vector(X.values)
 
         # Step 4: Compute covariance matrix
         cov_matrix = self._compute_covariance_matrix(X, mean_vec)
@@ -309,7 +329,7 @@ class imlPCA:
         eigenvalues, eigenvectors = self._eigen_decomposition(cov_matrix)
 
         # Step 6: Sort eigenvectors
-        sorted_eigenvalues, sorted_eigenvectors = self._sort_eigens(eigenvalues, eigenvectors, cumulative_threshold)
+        sorted_eigenvalues, sorted_eigenvectors = self._sort_eigens(eigenvalues, eigenvectors, cumulative_threshold=cumulative_threshold)
 
         X_projected = self._project_data(X, mean_vec, sorted_eigenvectors)
 
@@ -328,22 +348,22 @@ def main():
     # Load Datasets
     df_satimage, labels_satimage = data_loader.load_arff_data('satimage')
     df_splice,   labels_splice   = data_loader.load_arff_data('splice')
-    
+
     # Preprocess Datasets
     df_satimage = data_processor.preprocess_dataset(df_satimage)
     df_splice   = data_processor.preprocess_dataset(df_splice)
 
     ## --- Step 2: Plot Original Datasets --- ##
     print("\n--- Step 2: Plotting Original Satimage Dataset ---")
-    pca.plot_original_dataset(df_satimage, labels_satimage, feature_indices=[0, 1])
+    pca.plot_original_dataset(df_satimage, labels_satimage)
 
     print("\n--- Step 2: Plotting Original Splice Dataset ---")
-    pca.plot_original_dataset(df_splice, labels_splice, feature_indices=[0, 1])
+    pca.plot_original_dataset(df_splice, labels_splice)
 
     ## --- Step 3: Compute Mean Vectors --- ##
     print("\n--- Step 3: Computing Mean Vectors ---")
-    mean_vec_satimage = pca._compute_mean_vector(df_satimage)
-    mean_vec_splice   = pca._compute_mean_vector(df_splice)
+    mean_vec_satimage = pca._compute_mean_vector(df_satimage.values)
+    mean_vec_splice   = pca._compute_mean_vector(df_splice.values)
 
     ## --- Step 4: Compute Covariance Matrices --- ##
     print("\n--- Step 4: Computing Covariance Matrices ---")
@@ -365,12 +385,13 @@ def main():
     
     ## --- Step 6: Sort Eigenvectors --- ##
     print("\n--- Step 6: Sorting Eigenvectors ---")
+
     sorted_eigenvalues_satimage, sorted_eigenvectors_satimage = pca._sort_eigens(eigenvalues_satimage, eigenvectors_satimage)
     print(f"Satimage Sorted Eigenvalues:\n", sorted_eigenvalues_satimage)
     print(f"\nSatimage Sorted Eigenvectors:\n", sorted_eigenvectors_satimage)
     
     sorted_eigenvalues_splice, sorted_eigenvectors_splice = pca._sort_eigens(eigenvalues_splice, eigenvectors_splice)
-    print(f"\n\nSplice Sorted Eigenvalues:\n", sorted_eigenvalues_splice)
+    print(f"Splice Sorted Eigenvalues:\n", sorted_eigenvalues_splice)
     print(f"\nSplice Sorted Eigenvectors:\n", sorted_eigenvectors_splice)
 
     ## --- Step 7: Derive New Datasets --- ##
@@ -380,24 +401,28 @@ def main():
 
     ## --- Step 8: Plot New Subspaces --- ##
     print("\n--- Step 8: Plotting PCA Subspace for Satimage ---")
-    X_projected_satimage = projected_satimage.values
-    pca.plot_pca_subspace(X_projected_satimage, labels_satimage)
+    pca.plot_pca_subspace(projected_satimage, labels_satimage, 'Satimage')
 
     print("\n--- Step 8: Plotting PCA Subspace for Splice ---")
-    X_projected_splice = projected_splice.values
-    pca.plot_pca_subspace(X_projected_splice, labels_splice)
+    pca.plot_pca_subspace(projected_splice, labels_splice, 'Splice')
 
     ## --- Step 9: Reconstruct and Plot Datasets --- ##
     print("\n--- Step 9: Reconstructing Data from PCA Subspace ---")
-    reconstructed_satimage = pca.reconstruct_data(projected_satimage, mean_vec_satimage, sorted_eigenvectors_satimage)
-    reconstructed_splice   = pca.reconstruct_data(projected_splice,   mean_vec_splice,   sorted_eigenvectors_splice)
+    reconstructed_satimage = pca._reconstruct_data(projected_satimage, mean_vec_satimage, sorted_eigenvectors_satimage)
+    reconstructed_splice   = pca._reconstruct_data(projected_splice,   mean_vec_splice,   sorted_eigenvectors_splice)
+
+    mse_satimage = mean_squared_error(df_satimage, reconstructed_satimage)
+    print(f"Mean Squared Error between original and reconstructed Satimage data: {mse_satimage:.4f}")
+
+    mse_splice = mean_squared_error(df_satimage, reconstructed_satimage)
+    print(f"Mean Squared Error between original and reconstructed Splice data: {mse_splice:.4f}")
 
     # Plot Reconstructed Data vs Original Data for comparison
-    #print("\n--- Plotting Reconstructed vs Original Satimage Data ---")
-    #pca.plot_reconstructed_data(df_satimage, reconstructed_satimage, feature_indices=[0, 1])
+    print("\n--- Plotting Reconstructed vs Original Satimage Data ---")
+    pca.plot_original_and_reconstructed_dataset(df_satimage, reconstructed_satimage, labels_satimage, 2)
 
-    #print("\n--- Plotting Reconstructed vs Original Splice Data ---")
-    #pca.plot_reconstructed_data(df_splice, reconstructed_splice, feature_indices=[0, 1])
+    print("\n--- Plotting Reconstructed vs Original Splice Data ---")
+    pca.plot_original_and_reconstructed_dataset(df_splice, reconstructed_splice, labels_splice, 2)
 
 
 if __name__ == '__main__':
