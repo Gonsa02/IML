@@ -188,8 +188,8 @@ class imlPCA:
             mirrored_X_projected.loc[:, 0] *= -1  # Flip the x-axis for mirroring
         elif dataset_name == "Splice":
             mirrored_X_projected.loc[:, 1] *= -1  # Flip the y-axis for mirroring
-        else:
-            raise ValueError(f"Dataset name must be 'Satimage' or 'Splice', right now it's {dataset_name}.")
+        elif dataset_name != "Vowel":
+            raise ValueError(f"Dataset name must be 'Satimage', 'Splice', or 'Vowel', right now it's '{dataset_name}'.")
 
         if num_components == 2:
             plt.figure(figsize=(10, 8))
