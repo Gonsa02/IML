@@ -1,44 +1,102 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.feature_selection import mutual_info_classif
+import pandas as pd
+import seaborn as sns
 
 from preprocessing.data_loader import DataLoader
 from preprocessing.data_processor import DataProcessor
 
 class imlPCA:
-    def plot_original_dataset(self, X, labels, feature_indices=[0, 1]): # Step 2
-        plt.figure(figsize=(6, 5))
+    def __init__(self):
+        self.explained_variance_ratio_ = None
 
-        if len(feature_indices) == 2:
+    def _select_most_informative_features(self, X, labels, num_features):
+        """
+        Select the top `num_features` most informative features based on mutual information.
+        
+        Parameters:
+            - X (pandas.DataFrame): The input samples.
+            - labels (array-like): The target labels.
+            - num_features (int): The number of top features to select (2 or 3).
+        
+        Returns:
+            - selected_indices (list): Indices of the selected features.
+        """
+        if num_features not in [2, 3]:
+            raise ValueError("num_features must be either 2 or 3.")
+        
+        # Compute mutual information between each feature and the labels
+        mi = mutual_info_classif(X, labels, discrete_features='auto')
+        
+        # Get indices of features with highest mutual information
+        selected_indices = np.argsort(mi)[-num_features:][::-1]
+        
+        return selected_indices.tolist()
+    
+
+    def plot_original_dataset(self, X, labels, num_features=2): # Step 2
+        """
+        Plot the original dataset using the top `num_features` most informative features.
+        
+        Parameters:
+        - X (pandas.DataFrame): The input samples.
+        - labels (array-like): The target labels.
+        - num_features (int): Number of top features to plot (2 or 3).
+        """
+        if not isinstance(X, pd.DataFrame):
+            raise TypeError("X must be a pandas DataFrame with feature names.")
+        
+        # Select the most informative features
+        feature_indices = self._select_most_informative_features(X, labels, num_features)
+
+        # Retrieve feature names based on selected indices
+        feature_names = X.columns[feature_indices].tolist()
+
+        plt.figure(figsize=(8, 6))
+
+        if num_features == 2:
             for label in set(labels):
                 mask = (labels == label)
-                plt.scatter(X[mask, feature_indices[0]], X[mask, feature_indices[1]], label=str(label), alpha=0.7)
-            plt.xlabel(f"Feature {feature_indices[0]+1}")
-            plt.ylabel(f"Feature {feature_indices[1]+1}")
+                plt.scatter(
+                    X.values[mask, feature_indices[0]],
+                    X.values[mask, feature_indices[1]],
+                    label=str(label),
+                    alpha=0.7
+                )
+            plt.xlabel(feature_names[0])
+            plt.ylabel(feature_names[1])
 
-        elif len(feature_indices) == 3:
+        elif num_features == 3:
             from mpl_toolkits.mplot3d import Axes3D
             ax = plt.axes(projection='3d')
             for label in set(labels):
                 mask = (labels == label)
-                ax.scatter(X[mask, feature_indices[0]], X[mask, feature_indices[1]], X[mask, feature_indices[2]], label=str(label), alpha=0.7)
-            ax.set_xlabel(f"Feature {feature_indices[0]+1}")
-            ax.set_ylabel(f"Feature {feature_indices[1]+1}")
-            ax.set_zlabel(f"Feature {feature_indices[2]+1}")
+                ax.scatter(
+                    X.values[mask, feature_indices[0]],
+                    X.values[mask, feature_indices[1]],
+                    X.values[mask, feature_indices[2]],
+                    label=str(label),
+                    alpha=0.7
+                )
+            ax.set_xlabel(feature_names[0])
+            ax.set_ylabel(feature_names[1])
+            ax.set_zlabel(feature_names[2])
 
         else:
-            raise ValueError("feature_indices must be a list of 2 or 3 integers.")
+            raise ValueError("`num_features` must be 2 or 3.")
         
         plt.legend()
-        plt.title("Original Data")
+        plt.title(f"Original Data with {num_features} Most Informative Features")
         plt.grid(True)
         plt.show()
 
 
-    def compute_mean_vector(self, X): # Step 3
+    def _compute_mean_vector(self, X): # Step 3
         return np.mean(X, axis=0)
 
 
-    def compute_covariance_matrix(self, X, mean_vec): # Step 4
+    def _compute_covariance_matrix(self, X, mean_vec): # Step 4
         """
         Computes the covariance matrix of the dataset X.
         """
@@ -48,14 +106,25 @@ class imlPCA:
         return cov_matrix
 
 
-    def eigen_decomposition(self, cov_matrix): # Step 5
-        eigenvalues, eigenvectors = np.linalg.eig(cov_matrix)
+    def _eigen_decomposition(self, cov_matrix): # Step 5
+        eigenvalues, eigenvectors = np.linalg.eigh(cov_matrix)
         return eigenvalues, eigenvectors
     
 
-    def sort_eigens(self, eigenvalues, eigenvectors, k): # Step 6
+    def _sort_eigens(self, eigenvalues, eigenvectors, k=None, cumulative_threshold=0.85): # Step 6
         """
-        Sorts eigenvalues in descending order along with their corresponding eigenvectors and selects the top k eigenvectors.
+        Sorts eigenvalues in descending order along with their corresponding eigenvectors.
+        If k is specified, selects the top k eigenvectors.
+        If k is not specified, selects the minimum number of eigenvectors required to reach a cumulative explained variance of 85%.
+
+        Parameters:
+            - eigenvalues (numpy.ndarray): Array of eigenvalues.
+            - eigenvectors (numpy.ndarray): Matrix of eigenvectors.
+            - k (int, optional): Number of top eigenvectors to select. Defaults to None.
+        
+        Returns:
+            - sorted_eigenvalues (numpy.ndarray): Sorted eigenvalues.
+            - selected_eigenvectors (numpy.ndarray): Selected eigenvectors corresponding to the sorted eigenvalues.
         """
         # 1. Make pairs of (eigenvalue, eigenvector)
         eig_pairs = [(eigenvalues[i], eigenvectors[:, i]) for i in range(len(eigenvalues))]
@@ -64,17 +133,34 @@ class imlPCA:
         eig_pairs.sort(key=lambda x: np.abs(x[0]), reverse=True)
 
         # 3. Separate them back
-        sorted_eigenvalues = [pair[0] for pair in eig_pairs]
-        sorted_eigenvectors = [pair[1] for pair in eig_pairs]
+        sorted_eigenvalues =  np.array([pair[0] for pair in eig_pairs])
+        sorted_eigenvectors = np.array([pair[1] for pair in eig_pairs]).T
 
-        # 4. Select k eigenvectors
-        sorted_eigenvalues = sorted_eigenvalues[:k]
-        sorted_eigenvectors = sorted_eigenvectors[:k]
+        if k is not None:
+            if k > len(sorted_eigenvalues):
+                raise ValueError(f"k={k} is greater than the number of available eigenvalues ({len(sorted_eigenvalues)}).")
+            # 4a. Select the top k eigenvalues and eigenvectors
+            selected_eigenvalues = sorted_eigenvalues[:k]
+            selected_eigenvectors = sorted_eigenvectors[:, :k]
+        
+        else:
+            # 4b. Calculate cumulative explained variance
+            explained_variances = sorted_eigenvalues / np.sum(sorted_eigenvalues)
+            cumulative_variances = np.cumsum(explained_variances)
+            
+            # 4c. Determine the number of components to reach cumulative_threshold% variance
+            k = np.argmax(cumulative_variances >= cumulative_threshold) + 1
+            selected_eigenvalues = sorted_eigenvalues[:k]
+            selected_eigenvectors = sorted_eigenvectors[:, :k]
+            print(f"Selected top {k} eigenvectors to reach at least {cumulative_threshold*100}% (reached {cumulative_variances[k-1]:.2%}) cumulative explained variance.\n")
 
-        return np.array(sorted_eigenvalues), np.array(sorted_eigenvectors).T
+        # 5. (Extra) Store explained variance ratio
+        self.explained_variance_ratio_ = selected_eigenvalues / np.sum(eigenvalues)
+
+        return selected_eigenvalues, selected_eigenvectors
 
 
-    def project_data(self, X, mean_vec, W): # Step 7
+    def _project_data(self, X, mean_vec, W): # Step 7
         """
         Projects the data X onto the subspace formed by W.
         X shape: (n, d), W shape: (d, k)
@@ -91,77 +177,143 @@ class imlPCA:
         return X_projected
     
     
-    def plot_pca_subspace(self, X_projected, labels=None): # Step 8
+    def plot_pca_subspace(self, X_projected, labels, dataset_name, num_components=2): # Step 8
         """
-        Plots the 2D or 3D data from the projected subspace.
+        Plots the 2D data from the projected subspace.
         """
-        num_components = X_projected.shape[1]
-        plt.figure(figsize=(8, 6))
-        
         if num_components == 2:
-            if labels is not None and len(labels) == len(X_projected):
-                for label in set(labels):
-                    mask = (labels == label)
-                    plt.scatter(X_projected[mask, 0],
-                                X_projected[mask, 1],
-                                label=str(label), alpha=0.7)
-                plt.legend()
-            else:
-                plt.scatter(X_projected[:, 0], X_projected[:, 1], alpha=0.7)
+            plt.figure(figsize=(10, 8))
+            sns.scatterplot(
+                data=X_projected,
+                x=X_projected.columns[0],
+                y=X_projected.columns[1],
+                hue=labels,
+                palette='tab10',
+                s=60,
+                alpha=0.8,
+                edgecolor='k'
+            )
             
-            plt.xlabel("Principal Component 1")
-            plt.ylabel("Principal Component 2")
-
-        elif num_components == 3:
-            from mpl_toolkits.mplot3d import Axes3D
-            ax = plt.axes(projection='3d')
-            if labels is not None and len(labels) == len(X_projected):
-                for label in set(labels):
-                    mask = (labels == label)
-                    ax.scatter(X_projected[mask, 0],
-                            X_projected[mask, 1],
-                            X_projected[mask, 2],
-                            label=str(label), alpha=0.7)
-                ax.legend()
-            else:
-                ax.scatter(X_projected[:, 0], X_projected[:, 1], X_projected[:, 2], alpha=0.7)
-            
-            ax.set_xlabel("Principal Component 1")
-            ax.set_ylabel("Principal Component 2")
-            ax.set_zlabel("Principal Component 3")
+            plt.title(f"{dataset_name} Dataset", fontsize=16)
+            plt.xlabel(f'Principal Component 1 ({self.explained_variance_ratio_[0] * 100:.2f}% Variance)', fontsize=14)
+            plt.ylabel(f'Principal Component 2 ({self.explained_variance_ratio_[1] * 100:.2f}% Variance)', fontsize=14)
+            plt.legend(title='Cluster', fontsize=12, title_fontsize=12)
+            plt.tight_layout()
+            plt.show()
 
         else:
-            raise ValueError("Can only plot 2D or 3D PCA subspaces.")
-        
-        plt.title("Data in PCA Subspace")
-        plt.grid(True)
-        plt.show()
+            raise ValueError("Can only plot 2D PCA subspaces.")
 
-    def reconstruct_data(self, X_projected, mean_vec, W): # Step 9
+    def _reconstruct_data(self, X_projected, mean_vec, W): # Step 9
         """
         Reconstructs the data from the projected subspace back to original dimension.
         """
         return X_projected @ W.T + mean_vec
     
+    def plot_original_and_reconstructed_dataset(self, X_original, X_reconstructed, labels, num_features=2, cumulative_threshold=0.85):
+        """
+        Plots the original and reconstructed datasets side by side using the top `num_features` most informative features.
+        
+        Parameters:
+        - X_original (pandas.DataFrame): The original input samples with feature names.
+        - X_reconstructed (pandas.DataFrame or numpy.ndarray): The reconstructed input samples.
+        - labels (array-like): The target labels.
+        - num_features (int): Number of top features to plot (default is 2).
+        """
 
-    def fit_transform(self, X):
+        # Validate original dataset
+        if not isinstance(X_original, pd.DataFrame):
+            raise TypeError("X_original must be a pandas DataFrame with feature names.")
+        
+        # Handle reconstructed dataset
+        if isinstance(X_reconstructed, np.ndarray):
+            # Assume columns are in the same order and assign original column names
+            X_reconstructed = pd.DataFrame(X_reconstructed, columns=X_original.columns)
+        elif isinstance(X_reconstructed, pd.DataFrame):
+            # If columns are numbered (0, 1, 2, ...), assign original column names
+            if list(X_reconstructed.columns) == list(range(X_reconstructed.shape[1])):
+                X_reconstructed.columns = X_original.columns
+        else:
+            raise TypeError("X_reconstructed must be a pandas DataFrame or numpy.ndarray.")
+        
+        # Select the most informative features
+        feature_indices = self._select_most_informative_features(X_original, labels, num_features)
+        feature_names = X_original.columns[feature_indices].tolist()
+
+        # Create a color map based on unique labels
+        unique_labels = np.unique(labels)
+        colors = plt.cm.get_cmap('tab10', len(unique_labels))
+        label_color_dict = {label: colors(i) for i, label in enumerate(unique_labels)}
+        
+        # Calculate shared axis limits
+        x_min = min(X_original[feature_names[0]].min(), X_reconstructed[feature_names[0]].min()) - 0.5
+        x_max = max(X_original[feature_names[0]].max(), X_reconstructed[feature_names[0]].max()) + 0.5
+        y_min = min(X_original[feature_names[1]].min(), X_reconstructed[feature_names[1]].min()) - 0.5
+        y_max = max(X_original[feature_names[1]].max(), X_reconstructed[feature_names[1]].max()) + 0.5
+        
+        # Create subplots
+        fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+        
+        # Plot Original Dataset
+        ax = axes[0]
+        for label in np.unique(labels):
+            mask = (labels == label)
+            ax.scatter(
+                X_original.loc[mask, feature_names[0]],
+                X_original.loc[mask, feature_names[1]],
+                label=str(label),
+                alpha=0.7,
+                color=label_color_dict[label]
+            )
+        ax.set_xlim(x_min, x_max)
+        ax.set_ylim(y_min, y_max)
+        ax.set_xlabel(feature_names[0])
+        ax.set_ylabel(feature_names[1])
+        ax.set_title("Original Dataset")
+        ax.legend(title="Labels")
+        
+        # Plot Reconstructed Dataset
+        ax = axes[1]
+        for label in np.unique(labels):
+            mask = (labels == label)
+            ax.scatter(
+                X_reconstructed.loc[mask, feature_names[0]],
+                X_reconstructed.loc[mask, feature_names[1]],
+                label=str(label),
+                alpha=0.7,
+                color=label_color_dict[label]
+            )
+        ax.set_xlim(x_min, x_max)
+        ax.set_ylim(y_min, y_max)
+        ax.set_xlabel(feature_names[0])
+        ax.set_ylabel(feature_names[1])
+        ax.set_title(f"Reconstructed Dataset ({cumulative_threshold*100}% Cumulative Variance)")
+        ax.legend(title="Labels")
+        
+        plt.tight_layout()
+        plt.show()
+
+
+
+    def fit_transform(self, X, cumulative_threshold=0.85):
         """
         Fit the model with X and apply the dimensionality reduction on X.
         """
         # Step 3: Compute mean vector
-        mean_vec = self.compute_mean_vector(X)
+        mean_vec = self._compute_mean_vector(X)
 
         # Step 4: Compute covariance matrix
-        cov_matrix = self.compute_covariance_matrix(X, mean_vec)
+        cov_matrix = self._compute_covariance_matrix(X, mean_vec)
 
         # Step 5: Eigen decomposition
-        eigenvalues, eigenvectors = self.eigen_decomposition(cov_matrix)
+        eigenvalues, eigenvectors = self._eigen_decomposition(cov_matrix)
 
         # Step 6: Sort eigenvectors
-        k = 2
-        _, sorted_eigenvectors = self.sort_eigens(eigenvalues, eigenvectors, k)
+        sorted_eigenvalues, sorted_eigenvectors = self._sort_eigens(eigenvalues, eigenvectors, cumulative_threshold)
 
-        return self.project_data(X, mean_vec, sorted_eigenvectors)
+        X_projected = self._project_data(X, mean_vec, sorted_eigenvectors)
+
+        return X_projected
 
 
 def main():
@@ -183,52 +335,48 @@ def main():
 
     ## --- Step 2: Plot Original Datasets --- ##
     print("\n--- Step 2: Plotting Original Satimage Dataset ---")
-    X_satimage = df_satimage.values
-    pca.plot_original_dataset(X_satimage, labels_satimage, feature_indices=[0, 1])
+    pca.plot_original_dataset(df_satimage, labels_satimage, feature_indices=[0, 1])
 
     print("\n--- Step 2: Plotting Original Splice Dataset ---")
-    X_splice = df_splice.values
-    pca.plot_original_dataset(X_splice, labels_splice, feature_indices=[0, 1])
+    pca.plot_original_dataset(df_splice, labels_splice, feature_indices=[0, 1])
 
     ## --- Step 3: Compute Mean Vectors --- ##
     print("\n--- Step 3: Computing Mean Vectors ---")
-    mean_vec_satimage = pca.compute_mean_vector(df_satimage)
-    mean_vec_splice   = pca.compute_mean_vector(df_splice)
+    mean_vec_satimage = pca._compute_mean_vector(df_satimage)
+    mean_vec_splice   = pca._compute_mean_vector(df_splice)
 
     ## --- Step 4: Compute Covariance Matrices --- ##
     print("\n--- Step 4: Computing Covariance Matrices ---")
-    cov_matrix_satimage = pca.compute_covariance_matrix(df_satimage, mean_vec_satimage)
+    cov_matrix_satimage = pca._compute_covariance_matrix(df_satimage, mean_vec_satimage)
     print("Satimage Covariance Matrix:\n", cov_matrix_satimage)
 
-    cov_matrix_splice = pca.compute_covariance_matrix(df_splice, mean_vec_splice)
+    cov_matrix_splice = pca._compute_covariance_matrix(df_splice, mean_vec_splice)
     print("\nSplice Covariance Matrix:\n", cov_matrix_splice)
 
     ## --- Step 5: Calculate Eigenvectors --- ##
     print("\n--- Step 5: Calculating Eigenvectors and Eigenvalues ---")
-    eigenvalues_satimage, eigenvectors_satimage = pca.eigen_decomposition(cov_matrix_satimage)
+    eigenvalues_satimage, eigenvectors_satimage = pca._eigen_decomposition(cov_matrix_satimage)
     print("Satimage Eigenvalues:\n", eigenvalues_satimage)
     print("\nSatimage Eigenvectors:\n", eigenvectors_satimage)
     
-    eigenvalues_splice, eigenvectors_splice = pca.eigen_decomposition(cov_matrix_splice)
+    eigenvalues_splice, eigenvectors_splice = pca._eigen_decomposition(cov_matrix_splice)
     print("\n\nSplice Eigenvalues:\n", eigenvalues_splice)
     print("\nSplice Eigenvectors:\n", eigenvectors_splice)
     
     ## --- Step 6: Sort Eigenvectors --- ##
     print("\n--- Step 6: Sorting Eigenvectors ---")
-    k = 2
+    sorted_eigenvalues_satimage, sorted_eigenvectors_satimage = pca._sort_eigens(eigenvalues_satimage, eigenvectors_satimage)
+    print(f"Satimage Sorted Eigenvalues:\n", sorted_eigenvalues_satimage)
+    print(f"\nSatimage Sorted Eigenvectors:\n", sorted_eigenvectors_satimage)
     
-    sorted_eigenvalues_satimage, sorted_eigenvectors_satimage = pca.sort_eigens(eigenvalues_satimage, eigenvectors_satimage, k)
-    print(f"Top {k} Satimage Sorted Eigenvalues:\n", sorted_eigenvalues_satimage)
-    print(f"\nTop {k} Satimage Sorted Eigenvectors:\n", sorted_eigenvectors_satimage)
-    
-    sorted_eigenvalues_splice, sorted_eigenvectors_splice = pca.sort_eigens(eigenvalues_splice, eigenvectors_splice, k)
-    print(f"\n\nTop {k} Splice Sorted Eigenvalues:\n", sorted_eigenvalues_splice)
-    print(f"\nTop {k} Splice Sorted Eigenvectors:\n", sorted_eigenvectors_splice)
+    sorted_eigenvalues_splice, sorted_eigenvectors_splice = pca._sort_eigens(eigenvalues_splice, eigenvectors_splice)
+    print(f"\n\nSplice Sorted Eigenvalues:\n", sorted_eigenvalues_splice)
+    print(f"\nSplice Sorted Eigenvectors:\n", sorted_eigenvectors_splice)
 
     ## --- Step 7: Derive New Datasets --- ##
     print("\n--- Step 7: Projecting Data onto New Subspace ---")
-    projected_satimage = pca.project_data(df_satimage, mean_vec_satimage, sorted_eigenvectors_satimage)
-    projected_splice   = pca.project_data(df_splice,   mean_vec_splice, sorted_eigenvectors_splice)
+    projected_satimage = pca._project_data(df_satimage, mean_vec_satimage, sorted_eigenvectors_satimage)
+    projected_splice   = pca._project_data(df_splice,   mean_vec_splice, sorted_eigenvectors_splice)
 
     ## --- Step 8: Plot New Subspaces --- ##
     print("\n--- Step 8: Plotting PCA Subspace for Satimage ---")
