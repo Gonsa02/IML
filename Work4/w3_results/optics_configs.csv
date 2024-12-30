@@ -1,0 +1,13 @@
+dataset,metric,metric_type,algorithm,min_samples,n_clusters,metric_score
+satimage,ARI,euclidean,brute*,2,648,0.02208
+satimage,DBI,euclidean,brute*,8,4,0.32574
+satimage,Silhouette,euclidean,brute*,8,4,0.78082
+satimage,Purity,l1,brute*,2,851,0.50645
+splice,ARI,l1,brute*,2,280,0.18572
+splice,DBI,euclidean,brute*,4,33,0.96019
+splice,Silhouette,euclidean,brute*,4,33,0.44728
+splice,Purity,l1,brute*,2,280,0.72688
+vowel,ARI,euclidean,brute*,4,154,0.08904
+vowel,DBI,euclidean,brute*,2,288,0.61628
+vowel,Silhouette,chebyshev,brute*,14,2,0.60045
+vowel,Purity,l1,brute*,2,281,0.93232

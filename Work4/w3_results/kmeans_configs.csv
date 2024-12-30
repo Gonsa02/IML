@@ -1,0 +1,13 @@
+dataset,metric,k,distance,metric_score
+satimage,Adjusted Rand Index,6,cosine,0.5798
+satimage,Davies-Bouldin Index,3,manhattan,0.8118
+satimage,Silhouette Score,3,euclidean,0.4373
+satimage,Purity Score,14,cosine,0.8321
+splice,Adjusted Rand Index,4,euclidean,0.4305
+splice,Davies-Bouldin Index,15,manhattan,6.5208
+splice,Silhouette Score,2,manhattan,0.01727
+splice,Purity Score,10,cosine,0.9005
+vowel,Adjusted Rand Index,6,euclidean,0.1708
+vowel,Davies-Bouldin Index,15,manhattan,1.6468
+vowel,Silhouette Score,2,euclidean,0.1809
+vowel,Purity Score,14,euclidean,0.3585

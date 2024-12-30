@@ -5,6 +5,8 @@ from exercise_5 import main_sklearn_kernelpca_clustering
 from clustering_plots.clustering_plots import main_umap_and_pca
 
 import argparse
+import warnings
+warnings.filterwarnings("ignore")
 
 
 def run_all_experiments():
@@ -53,8 +55,8 @@ def main():
     parser.add_argument(
         '--experiment', 
         nargs='+',
-        choices=['all', 'pca', 'incremental_pca', 'clustering_our_pca', 'clustering_sklearn_pca', 'clustering_pca_and_umap'],
-        help="Type of experiment to run: 'pca', 'incremental_pca','clustering_our_pca', 'clustering_sklearn_pca', 'clustering_pca_and_umap', or 'all'"
+        choices=['all', 'pca', 'incremental_pca', 'clustering_our_pca', 'clustering_sklearn_kernelpca', 'clustering_pca_and_umap'],
+        help="Type of experiment to run: 'pca', 'incremental_pca','clustering_our_pca', 'clustering_sklearn_kernelpca', 'clustering_pca_and_umap', or 'all'"
     )
 
     args = parser.parse_args()

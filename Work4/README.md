@@ -29,7 +29,7 @@ pip install -r requirements.txt
 ```
 
 ## Usage
-You can run the script from the command line to execute dimensionality reduction experiments and generate plots of the experiment results.
+You can run the script from the command line to execute dimensionality reduction experiments and generate plots of the experiment results. Visualizations will appear on your screen as the program executes. 
 
 ## Running Experiments and Generating Plots
 To run a specific dimensionality reduction experiment, use the --experiment option followed by the experiment type.
