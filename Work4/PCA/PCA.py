@@ -178,20 +178,21 @@ class imlPCA:
         return X_projected
     
     
-    def plot_pca_subspace(self, X_projected, labels, dataset_name, num_components=2): # Step 8
+    def plot_pca_subspace(self, X_projected, labels, dataset_name, num_components=2, legend=True): # Step 8
         """
         Plots the 2D data from the projected subspace.
         """
         # Create a mirrored version of Custom PCA results by flipping the first principal component
         mirrored_X_projected = X_projected.copy()
-        if dataset_name == "Satimage":
+        if dataset_name == "satimage":
             mirrored_X_projected.loc[:, 0] *= -1  # Flip the x-axis for mirroring
-        elif dataset_name == "Splice":
+        elif dataset_name == "splice":
             mirrored_X_projected.loc[:, 1] *= -1  # Flip the y-axis for mirroring
-        elif dataset_name != "Vowel":
-            raise ValueError(f"Dataset name must be 'Satimage', 'Splice', or 'Vowel', right now it's '{dataset_name}'.")
+        elif dataset_name != "vowel":
+            raise ValueError(f"Dataset name must be 'satimage', 'splice', or 'vowel', right now it's '{dataset_name}'.")
 
         if num_components == 2:
+                
             plt.figure(figsize=(10, 8))
             sns.scatterplot(
                 data=mirrored_X_projected,
@@ -201,13 +202,15 @@ class imlPCA:
                 palette='tab10',
                 s=60,
                 alpha=0.8,
-                edgecolor='k'
+                edgecolor='k',
+                legend=legend
             )
             
             plt.title(f"{dataset_name} Dataset", fontsize=16)
             plt.xlabel(f'Principal Component 1 ({self.explained_variance_ratio_[0] * 100:.2f}% Variance)', fontsize=14)
             plt.ylabel(f'Principal Component 2 ({self.explained_variance_ratio_[1] * 100:.2f}% Variance)', fontsize=14)
-            plt.legend(title='Cluster', fontsize=12, title_fontsize=12)
+            if legend:
+                plt.legend(title='Cluster', fontsize=12, title_fontsize=12)
             plt.tight_layout()
             plt.show()
 
