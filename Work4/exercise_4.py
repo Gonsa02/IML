@@ -41,11 +41,11 @@ def experiment(dataset_name, kmeans, optics):
     kmeans_labels = kmeans.fit_predict(projected_data)
     pca.plot_pca_subspace(projected_data, kmeans_labels, dataset_name)
 
-    print(adjusted_rand_score(labels, kmeans_labels))
+    print("ARI: " + str(adjusted_rand_score(labels, kmeans_labels)))
     
     optics_labels = optics.fit_predict(projected_data)
     pca.plot_pca_subspace(projected_data, optics_labels, dataset_name, legend=False)
-    print(adjusted_rand_score(labels, optics_labels))
+    print("ARI: " + str(adjusted_rand_score(labels, optics_labels)))
 
 # Main workflow
 def main_our_pca_clustering():

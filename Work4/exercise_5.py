@@ -67,12 +67,13 @@ def experiment(dataset_name, kmeans, optics, n_components):
     kmeans_labels = kmeans.fit_predict(projected_data)
     plot_clustering_results(projected_data, kmeans_labels, dataset_name)
 
-    print(adjusted_rand_score(labels, kmeans_labels))
+    print("ARI: " + str(adjusted_rand_score(labels, kmeans_labels)))
 
     # Perform OPTICS clustering
     optics_labels = optics.fit_predict(projected_data)
     plot_clustering_results(projected_data, optics_labels, dataset_name, legend=False)
     print(adjusted_rand_score(labels, optics_labels))
+    print("ARI: " + str(adjusted_rand_score(labels, optics_labels)))
 
 
 # Main workflow
