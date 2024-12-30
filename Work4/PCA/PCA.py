@@ -187,12 +187,12 @@ class imlPCA:
         """
         # Create a mirrored version of Custom PCA results by flipping the first principal component
         mirrored_X_projected = X_projected.copy()
-        if dataset_name == "satimage":
+        if dataset_name == "Satimage":
             mirrored_X_projected.loc[:, 0] *= -1  # Flip the x-axis for mirroring
-        elif dataset_name == "splice":
+        elif dataset_name == "Splice":
             mirrored_X_projected.loc[:, 1] *= -1  # Flip the y-axis for mirroring
-        elif dataset_name != "vowel":
-            raise ValueError(f"Dataset name must be 'satimage', 'splice', or 'vowel', right now it's '{dataset_name}'.")
+        elif dataset_name != "Vowel":
+            raise ValueError(f"Dataset name must be 'Satimage', 'Splice', or 'Vowel', right now it's '{dataset_name}'.")
 
         if num_components == 2:
                 

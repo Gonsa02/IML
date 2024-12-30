@@ -22,7 +22,7 @@ def experiment(dataset_name, kmeans, optics):
     # Apply PCA
     projected_data = pca.fit_transform(df)
 
-    pca.plot_pca_subspace(projected_data, labels, dataset_name)
+    pca.plot_pca_subspace(projected_data, labels, dataset_name[0].upper()+dataset_name[1:])
 
     max_score = 0
     best_seed = -1
@@ -39,12 +39,12 @@ def experiment(dataset_name, kmeans, optics):
 
     kmeans.seed = best_seed
     kmeans_labels = kmeans.fit_predict(projected_data)
-    pca.plot_pca_subspace(projected_data, kmeans_labels, dataset_name)
+    pca.plot_pca_subspace(projected_data, kmeans_labels, dataset_name[0].upper()+dataset_name[1:])
 
     print("ARI: " + str(adjusted_rand_score(labels, kmeans_labels)))
     
     optics_labels = optics.fit_predict(projected_data)
-    pca.plot_pca_subspace(projected_data, optics_labels, dataset_name, legend=False)
+    pca.plot_pca_subspace(projected_data, optics_labels, dataset_name[0].upper()+dataset_name[1:], legend=False)
     print("ARI: " + str(adjusted_rand_score(labels, optics_labels)))
 
 # Main workflow
