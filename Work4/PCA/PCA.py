@@ -4,6 +4,9 @@ from sklearn.feature_selection import mutual_info_classif
 import pandas as pd
 import seaborn as sns
 from sklearn.metrics import mean_squared_error
+from sklearn.decomposition import PCA, IncrementalPCA
+import time
+import os
 
 from preprocessing.data_loader import DataLoader
 from preprocessing.data_processor import DataProcessor
@@ -427,6 +430,114 @@ def main_PCA():
     print("\n--- Plotting Reconstructed vs Original Splice Data ---")
     pca.plot_original_and_reconstructed_dataset(df_splice, reconstructed_splice, labels_splice, 2)
 
+def main_incremental_PCA():
+
+    data_loader = DataLoader()
+    data_processor = DataProcessor()
+
+    # Create results directory
+    os.makedirs('results', exist_ok=True)
+
+    # Initialize your custom PCA
+    custom_pca = imlPCA()
+
+    # Load Datasets
+    datasets_info = {
+        'satimage': data_loader.load_arff_data('satimage'),
+        'splice': data_loader.load_arff_data('splice'),
+    }
+
+    # Dictionary to store fit times
+    fit_times = {}
+
+    # Preprocess and perform PCA & Incremental PCA & Custom PCA
+    preprocessed_datasets = {}
+    for dataset_name, (df, labels) in datasets_info.items():
+        print(f"\nProcessing dataset: {dataset_name}")
+        preprocessed_df = data_processor.preprocess_dataset(df)
+
+        # Initialize a dictionary to store times for this dataset
+        fit_times[dataset_name] = {}
+
+        # --- Custom PCA ---
+        start_time = time.time()
+        custom_pca_result = custom_pca.fit_transform(preprocessed_df)
+        end_time = time.time()
+        fit_times[dataset_name]['Custom PCA'] = end_time - start_time
+        
+        # If custom_pca_result is a DataFrame, convert it to a NumPy array
+        if isinstance(custom_pca_result, pd.DataFrame):
+            custom_pca_result = custom_pca_result.values
+
+        # Obtain the explained variance ratio (in %) from your custom PCA
+        custom_pca_variance_ratio = custom_pca.explained_variance_ratio_ * 100
+
+        # Determine number of components for 85% explained variance
+        cumulative_variance = custom_pca.explained_variance_ratio_.cumsum()
+        n_components_85 = np.argmax(cumulative_variance >= 0.85) + 1
+        print(f"Number of components to reach 85% variance for {dataset_name}: {n_components_85}")
+        
+        # Save Custom PCA results to CSV
+        custom_pca_df = pd.DataFrame(custom_pca_result, columns=[f'Custom_PC{i+1}' for i in range(custom_pca_result.shape[1])])
+        custom_pca_df['label'] = labels
+        
+        output_file_custom_pca = os.path.join('results', f'{dataset_name}_custom_pca_results.csv')
+        custom_pca_df.to_csv(output_file_custom_pca, index=False)
+        print(f"Custom PCA results saved to {output_file_custom_pca}")
+        
+        # --- Sklearn PCA ---
+        start_time = time.time()
+        standard_pca = PCA(n_components=n_components_85)
+        pca_result = standard_pca.fit_transform(preprocessed_df)
+        end_time = time.time()
+        fit_times[dataset_name]['Sklearn PCA'] = end_time - start_time
+
+        # Calculate explained variance ratio (in %)
+        pca_variance_ratio = standard_pca.explained_variance_ratio_ * 100
+        
+        # Save Sklearn PCA results to CSV
+        pca_df = pd.DataFrame(pca_result, columns=[f'PC{i+1}' for i in range(pca_result.shape[1])])
+        pca_df['label'] = labels
+        
+        output_file_pca = os.path.join('results', f'{dataset_name}_sklearn_pca_results.csv')
+        pca_df.to_csv(output_file_pca, index=False)
+        print(f"Sklearn PCA results saved to {output_file_pca}")
+        
+        # --- Incremental PCA ---
+        start_time = time.time()
+        ipca = IncrementalPCA(n_components=n_components_85)
+        ipca_result = ipca.fit_transform(preprocessed_df)
+        end_time = time.time()
+        fit_times[dataset_name]['Incremental PCA'] = end_time - start_time
+
+        # Calculate explained variance ratio (in %)
+        ipca_variance_ratio = ipca.explained_variance_ratio_ * 100
+        
+        # Save Incremental PCA results to CSV
+        ipca_df = pd.DataFrame(ipca_result, columns=[f'PC{i+1}' for i in range(ipca_result.shape[1])])
+        ipca_df['label'] = labels
+        
+        output_file_ipca = os.path.join('results', f'{dataset_name}_sklearn_incremental_pca_results.csv')
+        ipca_df.to_csv(output_file_ipca, index=False)
+        print(f"Incremental PCA results saved to {output_file_ipca}")
+        
+        # Store all PCA results and labels in the dictionary for plotting
+        preprocessed_datasets[dataset_name] = {
+            'custom_pca_result': custom_pca_result,
+            'custom_pca_variance_ratio': custom_pca_variance_ratio,
+            'sklearn_pca_result': pca_result,
+            'sklearn_pca_variance_ratio': pca_variance_ratio,
+            'sklearn_ipca_result': ipca_result,
+            'sklearn_ipca_variance_ratio': ipca_variance_ratio,
+            'labels': labels
+        }
+
+    # Print the fit times
+    print("\nFit times (in seconds) for each dataset and implementation:")
+    for dataset_name, times in fit_times.items():
+        print(f"\nDataset: {dataset_name}")
+        for method, duration in times.items():
+            print(f"{method}: {duration:.4f} seconds")
 
 if __name__ == '__main__':
     main_PCA()
