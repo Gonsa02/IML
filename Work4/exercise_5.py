@@ -3,7 +3,7 @@ from preprocessing.data_loader import DataLoader
 from preprocessing.data_processor import DataProcessor
 from sklearn.cluster import OPTICS
 from sklearn.metrics import adjusted_rand_score
-from models.kmeans import KMeans
+from clustering.kmeans.kmeans import KMeans
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -76,7 +76,7 @@ def experiment(dataset_name, kmeans, optics, n_components):
 
 
 # Main workflow
-def main():
+def main_sklearn_pca_clustering():
 
     # SATIMAGE
 
@@ -114,4 +114,4 @@ def main():
     experiment('vowel', kmeans, optics, 8)
 
 if __name__ == "__main__":
-    main()
+    main_sklearn_pca_clustering()

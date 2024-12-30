@@ -10,7 +10,7 @@ from sklearn.metrics import adjusted_rand_score
 
 from PCA import PCA
 from preprocessing import DataLoader, DataProcessor
-from clustering.kmeans import kmeans, global_kmeans
+from clustering.kmeans import kmeans
 from clustering.optics import optics
 
 def load_data():
@@ -294,9 +294,11 @@ def pca_reduce_and_cluster():
     results_df = pd.DataFrame(results)
     results_df.to_csv('pca_clustering.csv', index=False)
 
-
-        
-if __name__ == '__main__':
+def main_umap_and_pca():
     run_experiments()
     umap_reduce_and_cluster()
     pca_reduce_and_cluster()
+
+        
+if __name__ == '__main__':
+    main_umap_and_pca()

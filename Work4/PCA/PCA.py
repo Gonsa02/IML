@@ -339,7 +339,7 @@ class imlPCA:
         return X_projected
 
 
-def main():
+def main_PCA():
     # Initialize PCA
     pca = imlPCA()
 
@@ -429,4 +429,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main_PCA()

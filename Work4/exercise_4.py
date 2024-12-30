@@ -3,7 +3,7 @@ from preprocessing.data_loader import DataLoader
 from preprocessing.data_processor import DataProcessor
 from sklearn.cluster import OPTICS
 from sklearn.metrics import adjusted_rand_score
-from models.kmeans import KMeans
+from clustering.kmeans.kmeans import KMeans
 
 def load_and_preprocess_data(data_loader, data_processor, dataset_name):
     df, labels = data_loader.load_arff_data(dataset_name)
@@ -48,7 +48,7 @@ def experiment(dataset_name, kmeans, optics):
     print(adjusted_rand_score(labels, optics_labels))
 
 # Main workflow
-def main():
+def main_our_pca_clustering():
 
     # SATIMAGE
 
@@ -87,4 +87,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main_our_pca_clustering()
