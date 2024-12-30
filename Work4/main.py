@@ -1,5 +1,5 @@
 
-from PCA.PCA import main_PCA
+from PCA.PCA import main_PCA, main_incremental_PCA
 from exercise_4 import main_our_pca_clustering
 from exercise_5 import main_sklearn_kernelpca_clustering
 from clustering_plots.clustering_plots import main_umap_and_pca
@@ -17,6 +17,12 @@ def run_all_experiments():
         print("PCA Experiments Completed.\n")
     except Exception as e:
         print(f"Error running PCA experiments: {e}\n")
+
+    try:
+        main_incremental_PCA()
+        print("Incremental PCA Experiments Completed.\n")
+    except Exception as e:
+        print(f"Error running Incremental PCA experiment: {e}\n")
     
     try:
         main_our_pca_clustering()
@@ -47,8 +53,8 @@ def main():
     parser.add_argument(
         '--experiment', 
         nargs='+',
-        choices=['all', 'pca', 'clustering_our_pca', 'clustering_sklearn_pca', 'clustering_pca_and_umap'],
-        help="Type of experiment to run: 'pca', 'clustering_our_pca', 'clustering_sklearn_pca', 'clustering_pca_and_umap', or 'all'"
+        choices=['all', 'pca', 'incremental_pca', 'clustering_our_pca', 'clustering_sklearn_pca', 'clustering_pca_and_umap'],
+        help="Type of experiment to run: 'pca', 'incremental_pca','clustering_our_pca', 'clustering_sklearn_pca', 'clustering_pca_and_umap', or 'all'"
     )
 
     args = parser.parse_args()
@@ -66,6 +72,8 @@ def main():
                 print(f"Running {experiment} experiment...")
                 if experiment == 'pca':
                     main_PCA()
+                elif experiment == 'incremental_pca':
+                    main_incremental_PCA()
                 elif experiment == 'clustering_our_pca':
                     main_our_pca_clustering()
                 elif experiment == 'clustering_sklearn_kernelpca':
