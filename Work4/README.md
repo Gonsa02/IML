@@ -41,6 +41,7 @@ python main.py --experiment <algorithm>
 ### Dimensionality Reduction Algorithms 
 
 - **pca**: Run our own PCA implementation. _Parts 1 and 2 of the assignment_.
+- **incremental_pca**: Run our own PCA implementation, sklearn PCA and sklearn Incremental PCA. _Part 3 of the assignment_.
 - **clustering_our_pca**: Run KMeans and OPTICS using our PCA implementation. _Part 4 of the assignment_.
 - **clustering_sklearn_kernelpca**: Run and plot KMeans and OPTICS with sklearn kernelPCA. _Part 5 of the assignment_. 
 - **clustering_pca_and_umap**: Run and plot PCA and UMAP for KMeans and OPTICS clustering methods. _Part 6 of the assignment_
