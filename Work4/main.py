@@ -66,9 +66,9 @@ def main():
                 print(f"Running {experiment} experiment...")
                 if experiment == 'pca':
                     main_PCA()
-                elif experiment == 'clustering_with_our_pca':
+                elif experiment == 'clustering_our_pca':
                     main_our_pca_clustering()
-                elif experiment == 'clustering_with_sklearn_kernelpca':
+                elif experiment == 'clustering_sklearn_kernelpca':
                     main_sklearn_kernelpca_clustering()
                 elif experiment == 'clustering_pca_and_umap':
                     main_umap_and_pca()
