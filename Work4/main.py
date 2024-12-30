@@ -1,7 +1,7 @@
 
 from PCA.PCA import main_PCA
 from exercise_4 import main_our_pca_clustering
-from exercise_5 import main_sklearn_pca_clustering
+from exercise_5 import main_sklearn_kernelpca_clustering
 from clustering_plots.clustering_plots import main_umap_and_pca
 
 import argparse
@@ -25,10 +25,10 @@ def run_all_experiments():
         print(f"Error running clustering with dimensionality reduction (Our PCA) experiment: {e}\n")
     
     try:
-        main_sklearn_pca_clustering()
-        print("Clustering with dimensionality reduction (sklearn PCA) Completed.\n")
+        main_sklearn_kernelpca_clustering()
+        print("Clustering with dimensionality reduction (sklearn kernelPCA) Completed.\n")
     except Exception as e:
-        print(f"Error running clustering with dimensionality reduction (sklearn PCA): {e}\n")
+        print(f"Error running clustering with dimensionality reduction (sklearn kernelPCA): {e}\n")
     
     try:
         main_umap_and_pca()
@@ -68,8 +68,8 @@ def main():
                     main_PCA()
                 elif experiment == 'clustering_with_our_pca':
                     main_our_pca_clustering()
-                elif experiment == 'clustering_with_sklearn_pca':
-                    main_sklearn_pca_clustering()
+                elif experiment == 'clustering_with_sklearn_kernelpca':
+                    main_sklearn_kernelpca_clustering()
                 elif experiment == 'clustering_pca_and_umap':
                     main_umap_and_pca()
                 print(f"{experiment} experiment completed.\n")

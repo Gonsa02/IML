@@ -76,7 +76,7 @@ def experiment(dataset_name, kmeans, optics, n_components):
 
 
 # Main workflow
-def main_sklearn_pca_clustering():
+def main_sklearn_kernelpca_clustering():
 
     # SATIMAGE
 
